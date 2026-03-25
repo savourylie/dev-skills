@@ -1,6 +1,6 @@
 ---
-name: implement
-description: "Implement all pending tickets from the ticket tracker, working through them one by one with QA review. Triggers on: /implement, implement tickets, implement next ticket, work through backlog, implement TICKET-NNN"
+name: implement-ticket
+description: "Implement all pending tickets from the ticket tracker, working through them one by one with QA review. Triggers on: /implement-ticket, implement tickets, implement next ticket, work through backlog, implement TICKET-NNN"
 user-invocable: true
 ---
 
@@ -43,10 +43,10 @@ Run lint, type-check, and build commands from `package.json` (e.g., `npm run lin
 
 ### 4b: Automated Code Review
 
-Invoke the `/code-review` skill using the `Skill` tool to review all uncommitted changes against the ticket requirements:
+Invoke the `/review-ticket` skill using the `Skill` tool to review all uncommitted changes against the ticket requirements:
 
 ```
-skill: "code-review"
+skill: "review-ticket"
 ```
 
 ### 4c: Fix and Re-review
@@ -54,7 +54,7 @@ skill: "code-review"
 If the code review finds any issues:
 1. Fix them immediately.
 2. Re-run the build check (4a) until clean.
-3. Re-invoke `/code-review` (4b) to verify fixes.
+3. Re-invoke `/review-ticket` (4b) to verify fixes.
 4. Repeat until both build and code review are clean.
 
 ## Phase 5: Commit
@@ -72,15 +72,15 @@ If the code review finds any issues:
 
 ## Phase 6: Update Ticket Status
 
-Invoke the `/update` skill using the `Skill` tool to mark the ticket as done:
+Invoke the `/update-ticket` skill using the `Skill` tool to mark the ticket as done:
 
 ```
-skill: "update", args: "TICKET-NNN done"
+skill: "update-ticket", args: "TICKET-NNN done"
 ```
 
 Replace `TICKET-NNN` with the actual ticket ID (e.g., `TICKET-005 done`).
 
-The `/update` skill handles everything: updating the ticket file status, cascading dependency changes, refreshing INDEX.md (tables, counts, graph), verification, and its own commit. Do **NOT** manually edit ticket files or `docs/tickets/INDEX.md`.
+The `/update-ticket` skill handles everything: updating the ticket file status, cascading dependency changes, refreshing INDEX.md (tables, counts, graph), verification, and its own commit. Do **NOT** manually edit ticket files or `docs/tickets/INDEX.md`.
 
 ## Phase 7: Loop
 

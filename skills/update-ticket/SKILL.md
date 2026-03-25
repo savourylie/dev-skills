@@ -1,6 +1,6 @@
 ---
-name: update
-description: "Update a ticket's status, cascade dependencies, refresh INDEX.md, and commit. Triggers on: /update, update ticket, mark ticket done, change ticket status, ticket status"
+name: update-ticket
+description: "Update a ticket's status, cascade dependencies, refresh INDEX.md, and commit. Triggers on: /update-ticket, update ticket, mark ticket done, change ticket status, ticket status"
 user-invocable: true
 ---
 

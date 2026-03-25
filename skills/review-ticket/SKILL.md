@@ -1,6 +1,6 @@
 ---
-name: code-review
-description: "Review code changes for bugs and issues. Triggers on: /code-review, review code, review changes, review my diff, code review, find bugs, review uncommitted, review against main, review this branch, check my changes, review against ticket"
+name: review-ticket
+description: "Review code changes for bugs and issues. Triggers on: /review-ticket, review code, review changes, review my diff, code review, find bugs, review uncommitted, review against main, review this branch, check my changes, review against ticket"
 user-invocable: true
 ---
 
@@ -108,10 +108,10 @@ and CLAUDE.md compliance. No issues met the reporting threshold.
 ## Usage Examples
 
 ```
-/code-review                    # Auto-detect: uncommitted changes or branch diff
-/code-review main               # Compare HEAD against main
-/code-review --pr 42            # Review pull request #42
-/code-review --uncommitted      # Explicitly review uncommitted changes
-/code-review --staged           # Review only staged changes
-/code-review 42                 # Review uncommitted changes against ticket #42
+/review-ticket                    # Auto-detect: uncommitted changes or branch diff
+/review-ticket main               # Compare HEAD against main
+/review-ticket --pr 42            # Review pull request #42
+/review-ticket --uncommitted      # Explicitly review uncommitted changes
+/review-ticket --staged           # Review only staged changes
+/review-ticket 42                 # Review uncommitted changes against ticket #42
 ```
