@@ -46,6 +46,39 @@ ln -s /absolute/path/to/dev-skills/.agents/skills "$HOME/.agents/skills"
 
 If you already have other global Codex skills, symlink individual skill folders instead of replacing the whole directory.
 
+### Install from GitHub in Codex Desktop
+
+Codex can also install skills directly from this GitHub repo via `$skill-installer`.
+
+After any installer-based install, restart Codex if the new skills do not appear immediately.
+
+#### Install all skills
+
+Use one installer request with all six skill paths:
+
+```text
+$skill-installer install from https://github.com/savourylie/dev-skills with these paths:
+.agents/skills/commit-ticket
+.agents/skills/commit-push-pr
+.agents/skills/feature-catalog
+.agents/skills/implement-ticket
+.agents/skills/review-ticket
+.agents/skills/update-ticket
+```
+
+#### Install an individual skill
+
+Use the GitHub directory URL for the specific skill you want:
+
+```text
+$skill-installer install https://github.com/savourylie/dev-skills/tree/main/.agents/skills/commit-ticket
+$skill-installer install https://github.com/savourylie/dev-skills/tree/main/.agents/skills/commit-push-pr
+$skill-installer install https://github.com/savourylie/dev-skills/tree/main/.agents/skills/feature-catalog
+$skill-installer install https://github.com/savourylie/dev-skills/tree/main/.agents/skills/implement-ticket
+$skill-installer install https://github.com/savourylie/dev-skills/tree/main/.agents/skills/review-ticket
+$skill-installer install https://github.com/savourylie/dev-skills/tree/main/.agents/skills/update-ticket
+```
+
 ## Codex Usage
 
 Prefer explicit skill invocation for deterministic behavior:
