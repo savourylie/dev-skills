@@ -13,6 +13,7 @@ The two trees share support files where possible, but they do not share `SKILL.m
 
 ## Skills
 
+- `create-tickets` - generate dev tickets from a PRD and optional design/UX/reference documents into `docs/tickets/` with dependency ordering and an INDEX.md tracker
 - `implement-ticket` - implement a specific ticket from `docs/tickets/`, run code review, and provide manual testing instructions
 - `review-ticket` - review uncommitted changes, branch diffs, PR diffs, or ticket implementations for bugs and scope gaps
 - `update-ticket` - change a ticket status, cascade dependency markers, refresh `docs/tickets/INDEX.md`, and commit the doc updates
@@ -54,10 +55,11 @@ After any installer-based install, restart Codex if the new skills do not appear
 
 #### Install all skills
 
-Use one installer request with all six skill paths:
+Use one installer request with all seven skill paths:
 
 ```text
 $skill-installer install from https://github.com/savourylie/cktk with these paths:
+.agents/skills/create-tickets
 .agents/skills/commit-ticket
 .agents/skills/commit-push-pr
 .agents/skills/feature-catalog
@@ -71,6 +73,7 @@ $skill-installer install from https://github.com/savourylie/cktk with these path
 Use the GitHub directory URL for the specific skill you want:
 
 ```text
+$skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/create-tickets
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/commit-ticket
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/commit-push-pr
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/feature-catalog
@@ -84,6 +87,7 @@ $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/sk
 Prefer explicit skill invocation for deterministic behavior:
 
 ```text
+$create-tickets PRD:docs/PRD.md DESIGN:docs/DESIGN.md
 $implement-ticket TICKET-003
 $review-ticket
 $review-ticket main
@@ -94,7 +98,7 @@ $commit-push-pr
 $feature-catalog
 ```
 
-`review-ticket` and `feature-catalog` also include descriptions suitable for Codex's implicit skill matching. The write-heavy workflows remain explicit-only in their `agents/openai.yaml` policy.
+`review-ticket` and `feature-catalog` also include descriptions suitable for Codex's implicit skill matching. The write-heavy workflows (`create-tickets`, `implement-ticket`, `update-ticket`, `commit-ticket`, `commit-push-pr`) remain explicit-only in their `agents/openai.yaml` policy.
 
 ## Claude Code Install
 
@@ -106,6 +110,10 @@ $feature-catalog
 ## Claude Code Usage
 
 ```text
+/create-tickets PRD:docs/PRD.md    # Generate tickets from a PRD
+/create-tickets PRD:docs/PRD.md DESIGN:docs/DESIGN.md UX:docs/UX.md
+/create-tickets                    # Auto-detects PRD in docs/tickets/
+
 /implement-ticket 003              # Implement a specific ticket
 /implement-ticket TICKET-003       # Also accepts full ticket ID
 

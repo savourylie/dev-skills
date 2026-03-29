@@ -1,20 +1,20 @@
 {
   "name": "cktk",
-  "description": "Software development workflow skills — implement tickets, code review, ticket status management, and feature cataloging",
+  "description": "Software development workflow skills — generate tickets from PRDs, implement tickets, code review, ticket status management, and feature cataloging",
   "owner": {
     "name": "savourylie"
   },
   "plugins": [
     {
       "name": "cktk",
-      "description": "Software development workflow skills — implement tickets, code review, ticket status management, and feature cataloging",
+      "description": "Software development workflow skills — generate tickets from PRDs, implement tickets, code review, ticket status management, and feature cataloging",
       "source": "./",
       "version": "1.0.0",
       "author": {
         "name": "savourylie"
       },
       "category": "development",
-      "keywords": ["development", "review-ticket", "tickets", "implement-ticket", "commit-ticket", "commit-push-pr", "feature-catalog", "workflow"]
+      "keywords": ["development", "review-ticket", "tickets", "implement-ticket", "commit-ticket", "commit-push-pr", "feature-catalog", "create-tickets", "workflow"]
     }
   ]
 }
