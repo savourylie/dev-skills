@@ -20,6 +20,7 @@ The two trees share support files where possible, but they do not share `SKILL.m
 - `commit-ticket` - create a single git commit from the intended repo changes
 - `commit-push-pr` - create one commit, push the branch, and open a pull request
 - `feature-catalog` - explore a codebase and produce a user-facing feature catalog
+- `cktk-upgrade` - pull the latest cktk skills from GitHub and update the local installation
 
 ## Codex Install
 
@@ -55,7 +56,7 @@ After any installer-based install, restart Codex if the new skills do not appear
 
 #### Install all skills
 
-Use one installer request with all seven skill paths:
+Use one installer request with all eight skill paths:
 
 ```text
 $skill-installer install from https://github.com/savourylie/cktk with these paths:
@@ -66,6 +67,7 @@ $skill-installer install from https://github.com/savourylie/cktk with these path
 .agents/skills/implement-ticket
 .agents/skills/review-ticket
 .agents/skills/update-ticket
+.agents/skills/cktk-upgrade
 ```
 
 #### Install an individual skill
@@ -80,6 +82,7 @@ $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/sk
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/implement-ticket
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/review-ticket
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/update-ticket
+$skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/cktk-upgrade
 ```
 
 ## Codex Usage
@@ -96,6 +99,7 @@ $update-ticket TICKET-003 done
 $commit-ticket
 $commit-push-pr
 $feature-catalog
+$cktk-upgrade
 ```
 
 `review-ticket` and `feature-catalog` also include descriptions suitable for Codex's implicit skill matching. The write-heavy workflows (`create-tickets`, `implement-ticket`, `update-ticket`, `commit-ticket`, `commit-push-pr`) remain explicit-only in their `agents/openai.yaml` policy.
@@ -129,6 +133,8 @@ $feature-catalog
 /commit-push-pr                    # Commit, push, and open a PR
 
 /feature-catalog                   # Generate feature catalog for current project
+
+/cktk-upgrade                      # Upgrade cktk to latest version from GitHub
 ```
 
 ## Project Structure

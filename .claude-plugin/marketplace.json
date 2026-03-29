@@ -14,7 +14,7 @@
         "name": "savourylie"
       },
       "category": "development",
-      "keywords": ["development", "review-ticket", "tickets", "implement-ticket", "commit-ticket", "commit-push-pr", "feature-catalog", "create-tickets", "workflow"]
+      "keywords": ["development", "review-ticket", "tickets", "implement-ticket", "commit-ticket", "commit-push-pr", "feature-catalog", "create-tickets", "cktk-upgrade", "workflow"]
     }
   ]
 }
