@@ -1,14 +1,14 @@
 ---
 name: implement-ticket
-description: "Implement all pending tickets from the ticket tracker, working through them one by one with QA review. Triggers on: /implement-ticket, implement tickets, implement next ticket, work through backlog, implement TICKET-NNN"
+description: "Implement a specific ticket from the ticket tracker with code review. Triggers on: /implement-ticket TICKET-NNN, implement TICKET-NNN, implement ticket NNN, implement ticket 3"
 user-invocable: true
 ---
 
 **Argument:** `$ARGUMENTS`
 
-You are a senior full-stack developer working through a backlog of implementation tickets. Follow this workflow precisely. Do not skip steps.
+You are a senior full-stack developer implementing a ticket. Follow this workflow precisely. Do not skip steps.
 
-If an argument was provided (e.g., `TICKET-001`), implement ONLY that specific ticket and stop after Phase 6 (do not loop). If no argument was provided, implement all pending tickets as described below.
+A ticket ID is required (e.g., `TICKET-001`, `001`, or `1`). If no argument is provided, inform the user that a ticket ID is required and stop.
 
 ## Phase 1: Understand the Project
 
@@ -16,11 +16,10 @@ If an argument was provided (e.g., `TICKET-001`), implement ONLY that specific t
 2. Read `docs/DESIGN.md` thoroughly. Understand the architecture, data models, API contracts, tech stack choices, and any design decisions or constraints.
 3. Briefly summarize (to yourself) the key requirements and architectural decisions before moving on. This is your mental model for all implementation work.
 
-## Phase 2: Pick the Next Ticket
+## Phase 2: Load the Ticket
 
-1. Read `docs/tickets/INDEX.md` to see the current status of all tickets.
-2. **If a specific ticket was provided as an argument**, select that ticket regardless of ordering. If it is already marked as done, inform the user and stop.
-   **Otherwise**, select the next ticket that is **not yet marked as done/complete**. Respect any ordering or priority indicated in the index. If tickets have dependencies, resolve dependencies first.
+1. Read `docs/tickets/INDEX.md` to see the current status of all tickets and understand dependencies.
+2. Select the ticket specified in the argument. If it is already marked as done, inform the user and stop.
 3. Read the full ticket file (e.g., `docs/tickets/TICKET-001.md`) for the selected ticket.
 4. Before writing any code, briefly state:
    - What you're implementing
@@ -34,6 +33,7 @@ If an argument was provided (e.g., `TICKET-001`), implement ONLY that specific t
 3. Include appropriate error handling, input validation, and edge case coverage.
 4. If the ticket specifies tests, write them. If it doesn't but the project has a test suite, add tests for your changes anyway.
 5. Make sure any new files are properly exported/imported and integrated with the rest of the codebase.
+6. Prepare manual testing instructions for the implementation. Think about what a developer or QA tester would need to do to verify the feature works correctly by hand — specific commands to run, URLs to visit, inputs to provide, expected outputs to observe, and edge cases to try.
 
 ## Phase 4: Code Review
 
@@ -43,7 +43,7 @@ Run lint, type-check, and build commands from `package.json` (e.g., `npm run lin
 
 ### 4b: Automated Code Review
 
-Invoke the `/review-ticket` skill using the `Skill` tool to review all uncommitted changes against the ticket requirements:
+This step is mandatory — do not skip it. Invoke the `/review-ticket` skill using the `Skill` tool to review all uncommitted changes against the ticket requirements:
 
 ```
 skill: "review-ticket"
@@ -57,40 +57,27 @@ If the code review finds any issues:
 3. Re-invoke `/review-ticket` (4b) to verify fixes.
 4. Repeat until both build and code review are clean.
 
-## Phase 5: Commit
+Do not proceed to the next phase until the build passes cleanly AND the code review returns no P0 or P1 findings.
 
-1. Stage all changed files relevant to this ticket.
-2. Write a clear commit message following this format:
-   ```
-   feat(TICKET-ID): Short summary of what was implemented
+## Phase 5: Summary and Manual Testing
 
-   - Bullet points describing key changes
-   - Reference the ticket ID
-   ```
-   Use conventional commit prefixes: `feat`, `fix`, `refactor`, `test`, `docs`, `chore` as appropriate.
-3. Commit the changes.
+Present the following to the user:
 
-## Phase 6: Update Ticket Status
+### Implementation Summary
+1. State which ticket was implemented (ID and title).
+2. Briefly summarize what was built — key files created or modified, architectural decisions made.
+3. Note any deviations from the ticket spec or design doc, and why.
+4. Note any remaining concerns, tech debt, or follow-up items.
 
-Invoke the `/update-ticket` skill using the `Skill` tool to mark the ticket as done:
+### Manual Testing Instructions
+Provide clear, step-by-step instructions for how to manually verify the implementation works correctly. Include:
+- Prerequisites (environment setup, dependencies, services that need to be running)
+- Exact commands to run the application or relevant part of it
+- Specific actions to take (URLs to visit, buttons to click, inputs to provide)
+- Expected results for each action
+- Edge cases worth testing manually
+- If the ticket involves API changes, include example curl commands or request/response pairs
 
-```
-skill: "update-ticket", args: "TICKET-NNN done"
-```
+If the implementation is purely internal (e.g., a refactor with no user-facing changes), state that manual testing is not applicable and explain what the automated tests cover instead.
 
-Replace `TICKET-NNN` with the actual ticket ID (e.g., `TICKET-005 done`).
-
-The `/update-ticket` skill handles everything: updating the ticket file status, cascading dependency changes, refreshing INDEX.md (tables, counts, graph), verification, and its own commit. Do **NOT** manually edit ticket files or `docs/tickets/INDEX.md`.
-
-## Phase 7: Loop
-
-**If a specific ticket was provided as an argument**, stop here. That ticket is done.
-
-**Otherwise**, go back to **Phase 2**. Pick the next incomplete ticket and repeat the entire cycle.
-
-Continue until ALL tickets in `docs/tickets/INDEX.md` are marked as done.
-
-When all tickets are complete, provide a final summary:
-- How many tickets were implemented
-- Any notable decisions or deviations from the original design
-- Any remaining concerns, tech debt, or follow-up items worth noting
+**Do NOT commit changes, update ticket status, or invoke the `/update-ticket`, `/commit-ticket`, or `/commit-push-pr` skills.** The user will handle those steps separately.

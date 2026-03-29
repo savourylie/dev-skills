@@ -13,7 +13,7 @@ The two trees share support files where possible, but they do not share `SKILL.m
 
 ## Skills
 
-- `implement-ticket` - implement backlog tickets from `docs/tickets/`, validate the work, commit it, and refresh ticket status docs
+- `implement-ticket` - implement a specific ticket from `docs/tickets/`, run code review, and provide manual testing instructions
 - `review-ticket` - review uncommitted changes, branch diffs, PR diffs, or ticket implementations for bugs and scope gaps
 - `update-ticket` - change a ticket status, cascade dependency markers, refresh `docs/tickets/INDEX.md`, and commit the doc updates
 - `commit-ticket` - create a single git commit from the intended repo changes
@@ -106,8 +106,8 @@ $feature-catalog
 ## Claude Code Usage
 
 ```text
-/implement-ticket                  # Implement all pending tickets
-/implement-ticket TICKET-003       # Implement a specific ticket
+/implement-ticket 003              # Implement a specific ticket
+/implement-ticket TICKET-003       # Also accepts full ticket ID
 
 /review-ticket                     # Auto-detect: uncommitted or branch diff
 /review-ticket main                # Compare HEAD against main
