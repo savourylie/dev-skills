@@ -43,6 +43,12 @@ Build a dependency graph:
 
 Group into phases: Foundation → Core Features → Polish & QA. Add more phases if warranted.
 
+Plan checkpoint placement:
+- **Feature checkpoints** after each group of 2–5 tickets that deliver a testable outcome
+- **Phase checkpoints** at the end of each phase (gate to next phase; can double as feature checkpoint if it covers the full phase)
+- **Final end-to-end checkpoint** as the very last ticket (replaces QA/polish pass)
+- Checkpoints are dependencies: subsequent tickets require the checkpoint to pass
+
 ## Phase 3: Write Ticket Files
 
 Read `./references/TEMPLATE.md` for the format.
@@ -58,6 +64,18 @@ Rules:
 - Implementation Notes: key files, decisions, gotchas
 - Testing: how to verify completion
 
+### Checkpoint Tickets
+
+Read `./references/TEMPLATE.md` — "Checkpoint Ticket Variant" section. For each checkpoint from Phase 2:
+
+- Filename: `NNN-test-checkpoint-N-kebab.md` or `NNN-test-phaseN-checkpoint.md`
+- Header: `# [TICKET-NNN] TEST: Checkpoint N — Title` or `# [TICKET-NNN] TEST: Phase N Checkpoint — Title`
+- Description: what tests to run, that it's a gate, 2–3 paragraphs with context
+- Acceptance criteria: pass/fail test cases, not code changes
+- Implementation notes: "Manual test execution ticket — no code changes unless bugs found"
+- Dependencies: last implementation ticket(s) in the group being tested
+- Number checkpoints sequentially across the project (Checkpoint 0, 1, 2...)
+
 ## Phase 4: Write INDEX.md
 
 Read `./references/INDEX.md` for the format.
@@ -66,6 +84,7 @@ Generate `docs/tickets/INDEX.md` with:
 - Today's date
 - Summary table with emoji status markers (✅ Done, 🔧 In Progress, 📋 Pending, 🚫 Blocked, ⏸️ Deferred)
 - Phase tables: number, linked title, backtick-wrapped status, dependencies, notes
+- Checkpoint rows: bold link `[**TEST: Checkpoint N — Title**](./NNN-test-...)`, Notes = `Gate: Phase N`
 - Status key
 
 ## Phase 5: Self-Review
@@ -75,10 +94,11 @@ Review ALL tickets for:
 2. Missing acceptance criteria (<2 or vague)
 3. Scope creep (>3 files or >5 criteria → split)
 4. Gaps (PRD features with no ticket, missing infrastructure)
-5. Consistency (template format, status correctness, INDEX accuracy)
+5. Checkpoint coverage (every phase has one, final ticket is a checkpoint, gate deps correct, criteria are pass/fail)
+6. Consistency (template format, status correctness, INDEX accuracy, checkpoint rows bold with `Gate:` notes)
 
 Fix any problems found. Update both ticket files and INDEX.md.
 
 ## Phase 6: Summary
 
-Report: ticket count, phase grouping, assumptions made, path to INDEX.md. Suggest `/implement-ticket 001` to start.
+Report: ticket count (implementation + checkpoint), phase grouping with checkpoint gates, assumptions made, path to INDEX.md. Suggest `/implement-ticket 001` to start.

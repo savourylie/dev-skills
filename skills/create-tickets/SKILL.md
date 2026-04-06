@@ -73,6 +73,14 @@ Group the work into phases:
 
 Use more phases if the project warrants it (e.g., Phase 2a and 2b if core features have a natural split). The phases are for human readability in the INDEX — they don't affect the dependency numbers.
 
+Plan checkpoint placement — test gate tickets that verify work before proceeding:
+
+1. **Feature checkpoints** — after each group of 2–5 implementation tickets that together deliver a testable outcome, plan a checkpoint ticket. The checkpoint tests that specific feature in isolation.
+2. **Phase checkpoints** — at the end of each phase, plan a checkpoint that verifies the integration of everything built in that phase. This gates entry to the next phase. If a phase already ends with a feature checkpoint that covers the full phase, it can double as the phase checkpoint.
+3. **Final checkpoint** — the very last ticket is always an end-to-end checkpoint that tests the complete system.
+
+Checkpoint tickets are dependencies: the next group of implementation tickets should list the preceding checkpoint in their `Requires:` line. This enforces the gate.
+
 ## Phase 3: Write Ticket Files
 
 Read this skill's `references/TEMPLATE.md` for the ticket format.
@@ -84,7 +92,7 @@ Each ticket should represent one focused session of work — roughly what a deve
 - **No bundling of unrelated concerns** — if a ticket touches both the data layer and a UI component that aren't tightly coupled, split them
 - **Err on the side of smaller** — two small tickets are better than one overloaded ticket
 - **First ticket is always project scaffolding** — repo init, dependency installation, design token setup, base layout
-- **Last ticket is always a QA/polish pass** — integration testing, edge cases, visual polish, accessibility
+- **Last ticket is always the final end-to-end checkpoint** — see checkpoint rules below
 
 Save each ticket to `docs/tickets/` with the filename pattern `NNN-kebab-case-title.md` (e.g., `001-project-setup.md`, `002-design-tokens.md`).
 
@@ -99,6 +107,19 @@ Rules for each ticket:
 - **Implementation Notes**: Key files to create/modify, architectural decisions, gotchas. Reference CLAUDE.md conventions here if applicable.
 - **Testing**: How to verify the ticket is complete — commands to run, URLs to visit, expected behavior.
 
+### Checkpoint Tickets
+
+For each checkpoint position identified in Phase 2, write a checkpoint ticket. Read this skill's `references/TEMPLATE.md` — "Checkpoint Ticket Variant" section for the format.
+
+- **Filename**: `NNN-test-checkpoint-N-kebab-description.md` (feature checkpoints) or `NNN-test-phaseN-checkpoint.md` (phase checkpoints)
+- **Header**: `# [TICKET-NNN] TEST: Checkpoint N — What's Being Tested` or `# [TICKET-NNN] TEST: Phase N Checkpoint — Phase Summary`
+- **Description**: State what tests to execute, that this is a gate, and what must pass before proceeding. Include 2–3 paragraphs: context on what was just built, what this checkpoint verifies, and what is gated by it.
+- **Acceptance Criteria**: Specific pass/fail test cases — not code changes. Each criterion is a concrete verification step.
+- **Implementation Notes**: Begin with "This is a manual test execution ticket — no code changes unless bugs are found during testing." Then list common failure modes, test commands, and environment notes.
+- **Dependencies**: The last implementation ticket(s) in the group being tested.
+
+Number checkpoints sequentially across the entire project (Checkpoint 0, Checkpoint 1, ...) — do not restart numbering per phase. The final ticket is always the last checkpoint.
+
 ## Phase 4: Write INDEX.md
 
 Read this skill's `references/INDEX.md` for the index format.
@@ -108,7 +129,8 @@ Generate `docs/tickets/INDEX.md` containing:
 1. **Last updated date** — today's date
 2. **Summary table** — counts of tickets by status, using emoji markers (✅ Done, 🔧 In Progress, 📋 Pending, 🚫 Blocked, ⏸️ Deferred)
 3. **Phase tables** — one table per phase, each ticket showing: number, linked title (relative path), status (backtick-wrapped), dependencies, notes
-4. **Status key** — definition of each status value
+4. **Checkpoint rows** — format checkpoint ticket links in bold: `[**TEST: Checkpoint N — Title**](./NNN-test-...)`. In the Notes column, write `Gate: Phase N` or `Gate: Final`
+5. **Status key** — definition of each status value
 
 All tickets start as either `pending` (no dependencies or all dependencies met) or `blocked` (has unmet dependencies). The summary counts should reflect the initial state.
 
@@ -134,18 +156,25 @@ This phase is mandatory. After writing all tickets, review every ticket in `docs
    - Is there a feature in the PRD that no ticket covers?
    - Is there infrastructure assumed but never set up?
 
-5. **Consistency**
+5. **Checkpoint coverage**
+   - Does every phase have at least one checkpoint?
+   - Is the final ticket a checkpoint (not an implementation ticket)?
+   - Do implementation tickets after a checkpoint list that checkpoint in their dependencies?
+   - Are checkpoint acceptance criteria testable pass/fail statements (not code changes)?
+
+6. **Consistency**
    - Do all tickets follow the template format?
    - Are status values correct given dependencies?
    - Does INDEX.md accurately reflect all ticket files?
+   - Are checkpoint rows bold in INDEX.md with `Gate:` notes?
 
 Fix any problems you find. Update both the ticket files and INDEX.md if changes are made.
 
 ## Phase 6: Summary
 
 Tell the user:
-- How many tickets were created
-- How they're grouped by phase
+- How many tickets were created (implementation + checkpoint)
+- How they're grouped by phase, including where checkpoints gate progress
 - Any assumptions made due to open questions in the PRD
 - The path to `docs/tickets/INDEX.md` as the project tracker
 - Suggest next steps: `/implement-ticket 001` to start implementing

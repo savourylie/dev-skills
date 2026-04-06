@@ -15,12 +15,15 @@
 
 ---
 
+> Checkpoint tickets appear in **bold** in the tables below. They are test gates — all tests must pass before subsequent tickets begin.
+
 ## Phase 1 — Foundation
 
 | #   | Ticket                                          | Status    | Depends On | Notes |
 | --- | ----------------------------------------------- | --------- | ---------- | ----- |
 | 001 | [Project Setup](./001-project-setup.md)         | `pending` | —          |       |
 | 002 | [Design Tokens](./002-design-tokens.md)         | `pending` | #001       |       |
+| 003 | [**TEST: Checkpoint 0 — Foundation Scaffold**](./003-test-checkpoint-0-foundation-scaffold.md) | `blocked` | #002 | Gate: Phase 1 |
 
 ## Phase 2 — Core Features
 
