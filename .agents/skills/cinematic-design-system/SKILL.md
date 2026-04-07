@@ -50,13 +50,31 @@ Read `references/phase-1-decisions.md`, `references/phase-2-storyboard.md`, `ref
 
 Run on every invocation before Phase 1. Mirror the user's language. One blocking question at a time.
 
-Three required items:
+The skill has **two distinct operating modes**:
 
-1. **Entry mode**: `Screenshot` / `Step-by-step` / `Surprise me`
+- **Extraction mode** (`Screenshot`) — the user provides a URL or image; the reference IS the subject. Derive all five identity fields from it.
+- **Build modes** (`Step-by-step`, `Surprise me`) — the user is designing a new project; ask for niche + pages.
+
+**Auto-detect extraction mode**: if the first argument after `$cinematic-design-system` is a URL or image path, treat as Screenshot mode. Do not ask the user to pick an entry mode first.
+
+**Extraction mode questionnaire**:
+
+1. Fetch the URL (inspect `<title>`, H1, nav, meta tags, visible palette, typography; crawl a few nav links to discover the page list). For an image, inspect via multimodal reading.
+2. Derive `(film, director, genre, niche, page list)` from the reference. Infer the film from URL path hints first (e.g. `/demo/cloud-atlas` → *Cloud Atlas*), then visible content, then aesthetic signature.
+3. Present all five fields in a single confirmation: *"I'll extract the design system describing this reference as: {film} ({director}) — {niche} — pages: {page list}. Proceed?"*
+4. Accept corrections in one reply. Only ask for a specific field if inference fails on it.
+5. Ask one other blocker: image placeholders y/n.
+6. **Do NOT ask** a niche-and-pages menu. The reference IS the site.
+
+**Build mode questionnaire**:
+
+1. **Entry mode**: `Step-by-step` or `Surprise me`
 2. **Image placeholders**: yes / no
-3. **Site context**: niche + page list
+3. **Site context**: niche + page list (required in build modes)
 
-### Entry Specification Rules
+### Entry Specification Rules (build modes only)
+
+In extraction mode these rules do not apply — the identity fields are derived from the reference.
 
 | User supplies | Skill does |
 |---|---|
@@ -70,14 +88,16 @@ Three required items:
 
 ### Phase 1: Decisions
 
-1. Derive `(director, film, genre)` per Entry Specification Rules
-2. Run anti-convergence 3-question film selection test (`anti-convergence.md`)
-3. Web-research the committed director and film when possible; mark weaker pass when not
-4. Run Demo Uniqueness Protocol (`demo-uniqueness.md`)
-5. Decompose user-supplied references per `reference-protocol.md`
-6. Copy `assets/FILM_TEMPLATE/RESEARCH.md` → `docs/RESEARCH.md`, fill in every section
+1. **Lock identity fields**. In extraction mode, carry forward the five fields confirmed in Phase 0. In build modes, apply the Entry Specification Rules from Phase 0.
+2. Run anti-convergence 3-question film test (`anti-convergence.md`). **Gate** in build modes; **descriptive** in extraction mode (film is given by the reference).
+3. Web-research the committed director and film when possible. In extraction mode, also study the reference site itself in depth. Mark weaker pass when web access unavailable.
+4. Run Demo Uniqueness Protocol (`demo-uniqueness.md`). **Preventive** in build modes; **diagnostic** in extraction mode (flag redundant extractions, don't fail them).
+5. Decompose user-supplied references per `reference-protocol.md`. **Build mode only** — in extraction mode the reference IS the subject.
+6. Copy `assets/FILM_TEMPLATE/RESEARCH.md` → `docs/RESEARCH.md`, fill in every section.
 
 ### Phase 2: Storyboard
+
+**Mode framing**: in extraction mode, Phase 2 is *observational* — describe what the reference already does. In build modes, Phase 2 is *generative* — design the scenes and compositions for the new project. Same fields, same gates.
 
 **Order** (non-negotiable): site-wide cinematic grammar → per-page scene theses → per-page signature compositions → hold back shared system for Phase 3.
 

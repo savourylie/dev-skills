@@ -73,22 +73,49 @@ Inside Phase 2 and Phase 3, follow this internal order without skipping:
 
 Run this on every invocation. Phase 1 is blocked until it completes.
 
-- **Mirror the user's language** in every question and deliverable.
-- **Ask only one blocking question at a time**. If an environment supports structured forms, use them; otherwise ask in plain language.
-- **If the user pre-answers items** in the initial request, confirm what they said and only ask for what's missing.
+The skill has **two distinct operating modes** with different questionnaires. Pick the right mode before asking anything:
 
-The questionnaire has three required items:
+- **Extraction mode** (`Screenshot`) — the user has an existing URL or screenshot and wants to **document its design system**. The reference IS the subject. Niche and page list are derived from the reference, not asked.
+- **Build modes** (`Step-by-step`, `Surprise me`) — the user wants to **design a new project** using a film as research input. The reference (if any) is inspiration for the new project. Niche and page list are supplied by the user.
 
-1. **Entry mode**. One of:
-   - `Screenshot` — reverse-engineer a visual reference from an image or URL.
-   - `Step-by-step` — the user chooses what they want to lock: *film*, *director*, *genre*, or some combination (see Entry Specification Rules below).
-   - `Surprise me` — the skill picks a fresh combination.
-2. **Image placeholders**. Yes/no on whether DESIGN.md and UX_DESIGN.md should reserve image placeholder slots.
-3. **Site context**. The niche and the page list, before any architecture work.
+**Auto-detect extraction mode**: if the user's first argument is a URL or an image path (e.g. `/cinematic-design-system https://example.com/some/page`), treat it as Screenshot entry mode automatically. Do not ask the user to pick an entry mode first.
 
-### Entry Specification Rules
+**Always**:
+- Mirror the user's language in every question and deliverable.
+- Ask only one blocking question at a time.
+- If the user pre-answers items in their initial request, confirm what they said and only ask for what's missing.
+- If a structured-form environment is available, use it.
 
-Phase 0 must accept or block combinations according to this table. If the user's step-by-step answer is ambiguous or invalid, ask a follow-up.
+### Extraction mode questionnaire (Screenshot)
+
+When the user provides a URL or screenshot, the reference IS the site. Do not ask "what niche and pages should the new site cover" — there is no new site.
+
+1. **Fetch or inspect the reference.** For a URL: fetch the page; inspect the `<title>`, H1, nav, meta tags, visible palette, typography. When possible, crawl a few linked pages from the nav to discover the full page list. For an image: inspect it via multimodal reading.
+2. **Derive all five identity fields** from the reference:
+   - **Film** — infer from URL path hints first (e.g. `/demo/cloud-atlas` → *Cloud Atlas*, `/projects/blade-runner` → *Blade Runner*). If the path has no hint, infer from visible content and aesthetic signature.
+   - **Director** — look up from the film via web research or `references/data/directors-200.md`.
+   - **Genre** — derived from the film.
+   - **Niche** — what kind of project is this site? (Editorial magazine, architecture firm, record label, film portfolio, etc.) Infer from content.
+   - **Page list** — actual pages discovered in the nav or visible in the reference.
+3. **Present the full derivation in a single confirmation message**:
+   > *"I'll extract the design system describing this reference as: **{film}** ({director}) — **{niche}** — pages: **{page list}**. Proceed?"*
+4. **Accept corrections in a single reply** — the user can rewrite any field. If the reference is genuinely ambiguous on a field and you cannot infer it with confidence, ask explicitly for that field only.
+5. **Ask only one other blocker question**: image placeholders y/n.
+6. **Do NOT ask** a niche-and-pages questionnaire. The reference IS the site.
+
+### Build mode questionnaire (Step-by-step, Surprise me)
+
+When the user is designing a new project (no URL/image supplied, or the user explicitly picks Step-by-step or Surprise me):
+
+1. **Entry mode**: `Step-by-step` or `Surprise me`.
+2. **Image placeholders**: yes/no.
+3. **Site context**: the niche and the page list the new project should cover. Required.
+
+Build modes use the Entry Specification Rules below to resolve `(director, film, genre)` from whatever the user supplies.
+
+### Entry Specification Rules (build modes only)
+
+In build modes, Phase 0 must accept or block combinations according to this table. If the user's step-by-step answer is ambiguous or invalid, ask a follow-up.
 
 | User supplies | Skill does |
 |---|---|
@@ -100,20 +127,30 @@ Phase 0 must accept or block combinations according to this table. If the user's
 | *genre + film* | **DISALLOWED**. Film implies genre. Block the combination at selection time. If both arrive anyway, keep the film and discard the genre with a one-line note in RESEARCH.md |
 | *nothing* (Surprise me) | Pick genre → director → film, or pick a film and derive the rest, honoring the Demo Uniqueness Protocol shell-ban list |
 
+In extraction mode, these rules do not apply — the identity fields are derived directly from the reference content (see above).
+
 ## Phase 1 — Decisions → `docs/RESEARCH.md`
 
-**Read at entry**: `references/phase-1-decisions.md`, `references/demo-uniqueness.md`, `references/anti-convergence.md`, `references/reference-protocol.md` (only if user provided references), `references/data/directors-200.md`.
+**Read at entry**: `references/phase-1-decisions.md`, `references/demo-uniqueness.md`, `references/anti-convergence.md`, `references/reference-protocol.md` (only in build mode if user supplied a reference), `references/data/directors-200.md`.
 
-1. Apply the Entry Specification derivation rules to determine `(director, film, genre)`.
-2. Run the **anti-convergence 3-question film selection test** from `references/anti-convergence.md`. If any answer is unsatisfactory, pick a different film.
-3. Research the committed director and film (web, when available) — film palette, lighting behavior, cinematography, framing logic, production design, signature techniques, plus 2-3 premium sites in the same niche. Required when web access is available; when not, mark the research pass as weaker and continue.
-4. Run the **Demo Uniqueness Protocol** from `references/demo-uniqueness.md`. Write the previous-work audit, shell-ban list, and primary composition family. Always do this — even without prior work, write a shell-ban list targeting common fallback templates.
-5. If the user supplied visual references, decompose them per `references/reference-protocol.md`. Extract borrowable dimensions only. Forbid full-composition copying.
-6. Copy `assets/FILM_TEMPLATE/RESEARCH.md` to `docs/RESEARCH.md` and fill in every section.
+1. **Lock the identity fields.**
+   - In **extraction mode**, the five fields `(director, film, genre, niche, pages)` were already derived and confirmed in Phase 0. Copy them forward into `docs/RESEARCH.md`.
+   - In **build modes**, apply the Entry Specification Rules from Phase 0 to determine `(director, film, genre)` from whatever the user supplied.
+2. **Run the anti-convergence 3-question film test** from `references/anti-convergence.md`.
+   - In **build modes**, this is a *gate*: if any answer is unsatisfactory, pick a different film.
+   - In **extraction mode**, the film is given by the reference — the three questions become *descriptive analysis* of why the existing film fits the existing niche. Record the answers, but do not re-pick the film.
+3. **Research the committed director and film** (web, when available). Gather palette, lighting behavior, cinematography, framing logic, production design, signature techniques. In **build modes**, also gather 2-3 premium sites in the same niche. In **extraction mode**, also study the reference site itself in depth (scroll, interactions, materials). Required when web access is available; when not, mark the research pass as weaker and continue.
+4. **Run the Demo Uniqueness Protocol** from `references/demo-uniqueness.md`. Write the previous-work audit, shell-ban list, and primary composition family. Always do this — even without prior work, write a shell-ban list against common fallback templates. In **extraction mode**, the "primary composition family" is whatever the reference *already uses*, and the shell-ban list checks whether this extraction is meaningfully different from prior extractions rather than preventing new-site convergence.
+5. **Reference decomposition** (build mode only). If the user supplied an *additional* visual reference alongside a build-mode project (Step-by-step with an attached mood board URL, etc.), decompose it per `references/reference-protocol.md`. In extraction mode, the reference IS the subject — skip this step.
+6. **Copy `assets/FILM_TEMPLATE/RESEARCH.md`** to `docs/RESEARCH.md` and fill in every section.
 
-**Gate**: Phase 2 blocked until `docs/RESEARCH.md` contains director + film + genre + niche + pages + 3-question film test + research notes + 2-3 niche references (or weak-pass marker) + demo uniqueness audit + shell-ban list + primary composition family.
+**Gate**: Phase 2 blocked until `docs/RESEARCH.md` contains director + film + genre + niche + pages + 3-question film test (descriptive in extraction mode) + research notes + (in build mode) 2-3 niche references or weak-pass marker + demo uniqueness audit + shell-ban list + primary composition family.
 
 ## Phase 2 — Storyboard → `docs/UX_DESIGN.md` + `docs/INFO_ARCHITECTURE.md`
+
+**Mode framing**:
+- In **extraction mode**, Phase 2 is *observational*: describe what the reference already does — its cinematic grammar, its per-page scene theses, its signature compositions, its motion orchestration. The same fields and gates apply, but the content is derived from inspection rather than from invention.
+- In **build modes**, Phase 2 is *generative*: design the cinematic grammar, scene theses, and signature compositions for the new project using the film as research input.
 
 **Read at entry**: `references/phase-2-storyboard.md`, `references/premium-calibration.md`, `references/anti-convergence.md`. Then progressively load one data file at a time as needed:
 

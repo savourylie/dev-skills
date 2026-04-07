@@ -17,12 +17,16 @@ jargon inside DESIGN.md or preview.html. They live here.
 
 ## Entry Mode
 
-<!-- How the user entered the workflow. One of: Screenshot / Step-by-step /
-     Surprise me. Note any user-supplied constraints. -->
+<!-- How the user entered the workflow. One of:
+     - Screenshot (extraction mode: reference IS the subject)
+     - Step-by-step (build mode: designing a new project)
+     - Surprise me (build mode: skill picks the film for a new project)
+     Note any user-supplied constraints or the reference URL/image path. -->
 
-- **Mode**: [Screenshot / Step-by-step / Surprise me]
-- **User-supplied**: [film only | director only | genre only | director+film | director+genre | nothing]
-- **Notes**: [any free-text constraints the user gave]
+- **Mode**: [Screenshot (extraction) / Step-by-step (build) / Surprise me (build)]
+- **Reference** (Screenshot mode only): [URL or image path]
+- **User-supplied** (build modes only): [film only | director only | genre only | director+film | director+genre | nothing]
+- **Notes**: [any free-text constraints the user gave, or derivation notes from the reference]
 
 ## Director
 
@@ -39,8 +43,15 @@ jargon inside DESIGN.md or preview.html. They live here.
 - **Year**: [YYYY]
 - **Genre**: [Genre — derived from the film if not supplied]
 - **Why this film for this niche** (anti-convergence 3-question test):
+
+  <!-- Build modes: this is a gate. If any answer is unsatisfactory, pick a
+       different film before continuing.
+       Extraction mode: the film is given by the reference. These questions
+       become descriptive analysis of how well the existing film fits the
+       existing niche. Record the answers; do not re-pick the film. -->
+
   1. *What specific visual problem does this film solve for the niche?* [Concrete cinematographic quality — not "feels premium"]
-  2. *Would this same film work equally well for three unrelated niches?* [If yes, pick differently — it's too generic]
+  2. *Would this same film work equally well for three unrelated niches?* [If yes in build mode, pick differently; if yes in extraction mode, note that the reference's choice is generic]
   3. *Are you picking the film or its reputation?* [Rebuild justification from specific scenes / shots / decisions]
 
 ## Niche and Pages
