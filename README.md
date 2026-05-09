@@ -136,6 +136,8 @@ Prefer explicit skill invocation for deterministic behavior:
 ```text
 $create-tickets PRD:docs/PRD.md DESIGN:docs/DESIGN.md
 $implement-ticket TICKET-003
+$implement-ticket TICKET-003 worktree
+$implement-ticket TICKET-003 worktree dev
 $review-ticket
 $review-ticket main
 $review-ticket --pr 42
@@ -175,6 +177,8 @@ $cinematic-design-system
 
 /implement-ticket 003              # Implement a specific ticket
 /implement-ticket TICKET-003       # Also accepts full ticket ID
+/implement-ticket 003 worktree     # Implement inside .worktrees/003-slug off origin/main
+/implement-ticket 003 worktree dev # Same, but worktree is based on origin/dev
 
 /review-ticket                     # Auto-detect: uncommitted or branch diff
 /review-ticket main                # Compare HEAD against main

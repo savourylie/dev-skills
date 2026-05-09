@@ -12,7 +12,7 @@
     {
       "name": "implement-ticket",
       "path": ".agent/skills/implement-ticket",
-      "description": "Implement a specific ticket with code review"
+      "description": "Implement a specific ticket with code review, optionally in an isolated worktree"
     },
     {
       "name": "review-ticket",
