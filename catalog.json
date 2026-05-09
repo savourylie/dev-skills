@@ -40,6 +40,11 @@
       "description": "Create git worktrees for one or more tickets, each on its own branch under .worktrees/NNN-slug"
     },
     {
+      "name": "merge-worktree",
+      "path": ".agent/skills/merge-worktree",
+      "description": "Merge ticket worktrees back into their base branch, then remove the worktree and delete the local branch"
+    },
+    {
       "name": "feature-catalog",
       "path": ".agent/skills/feature-catalog",
       "description": "Explore a codebase and produce a user-facing feature catalog"

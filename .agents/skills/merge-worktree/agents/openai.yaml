@@ -1,0 +1,7 @@
+interface:
+  display_name: "Merge Worktree"
+  short_description: "Merge a ticket worktree branch back into its base, then remove the worktree and delete the branch"
+  default_prompt: "Merge each requested ticket's worktree branch into the resolved base branch, then remove the worktree directory and delete the local branch. Detect branches already merged upstream and just clean up in that case."
+
+policy:
+  allow_implicit_invocation: false

@@ -23,6 +23,7 @@ The Claude and Codex trees share support files where possible, but they do not s
 - `commit-ticket` — create a single git commit from the intended repo changes
 - `commit-push-pr` — create one commit, push the branch, and open a pull request
 - `create-worktree` — create git worktrees for one or more tickets under `.worktrees/NNN-slug/`, each on its own branch off a chosen base
+- `merge-worktree` — merge ticket worktree branches back into their base, then remove the worktree and delete the local branch (cleanup half of `create-worktree`)
 - `feature-catalog` — explore a codebase and produce a user-facing feature catalog
 - `cktk-upgrade` — pull the latest cktk skills from GitHub and update the local installation
 
@@ -81,7 +82,7 @@ After any installer-based install, restart Codex if the new skills do not appear
 
 #### Install all skills
 
-Use one installer request with all sixteen skill paths:
+Use one installer request with all seventeen skill paths:
 
 ```text
 $skill-installer install from https://github.com/savourylie/cktk with these paths:
@@ -89,6 +90,7 @@ $skill-installer install from https://github.com/savourylie/cktk with these path
 .agents/skills/commit-ticket
 .agents/skills/commit-push-pr
 .agents/skills/create-worktree
+.agents/skills/merge-worktree
 .agents/skills/feature-catalog
 .agents/skills/implement-ticket
 .agents/skills/review-ticket
@@ -112,6 +114,7 @@ $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/sk
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/commit-ticket
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/commit-push-pr
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/create-worktree
+$skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/merge-worktree
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/feature-catalog
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/implement-ticket
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/review-ticket
@@ -141,6 +144,8 @@ $commit-ticket
 $commit-push-pr
 $create-worktree 7
 $create-worktree 7 8 9 dev
+$merge-worktree 7
+$merge-worktree 7 8 dev
 $feature-catalog
 $cktk-upgrade
 $design-system-extractor
@@ -152,7 +157,7 @@ $ux-redesign
 $cinematic-design-system
 ```
 
-`review-ticket`, `feature-catalog`, `design-system-extractor`, `design-system-web-applier`, `design-system-mobile-applier`, and `wcag-accessibility-checker` also include descriptions suitable for Codex's implicit skill matching. The write-heavy workflows (`create-tickets`, `implement-ticket`, `update-ticket`, `commit-ticket`, `commit-push-pr`, `create-worktree`, `ux-design`, `ux-redesign`) remain explicit-only in their `agents/openai.yaml` policy.
+`review-ticket`, `feature-catalog`, `design-system-extractor`, `design-system-web-applier`, `design-system-mobile-applier`, and `wcag-accessibility-checker` also include descriptions suitable for Codex's implicit skill matching. The write-heavy workflows (`create-tickets`, `implement-ticket`, `update-ticket`, `commit-ticket`, `commit-push-pr`, `create-worktree`, `merge-worktree`, `ux-design`, `ux-redesign`) remain explicit-only in their `agents/openai.yaml` policy.
 
 ## Claude Code Install
 
@@ -186,6 +191,9 @@ $cinematic-design-system
 /create-worktree 7 8 9             # Worktrees for several tickets at once
 /create-worktree 7 dev             # Worktree based on origin/dev instead
 
+/merge-worktree 7                  # Merge ticket 007 into main, remove worktree, delete branch
+/merge-worktree 7 8 dev            # Merge multiple tickets into dev and clean up
+
 /feature-catalog                   # Generate feature catalog for current project
 
 /cktk-upgrade                      # Upgrade cktk to latest version from GitHub
@@ -215,7 +223,7 @@ Or install skills directly from GitHub:
 curl -sL https://github.com/savourylie/cktk/archive/refs/heads/main.tar.gz \
   | tar xz --strip-components=1 -C /tmp cktk-main/skills
 mkdir -p .agent/skills
-for s in create-tickets implement-ticket review-ticket update-ticket commit-ticket commit-push-pr create-worktree feature-catalog cktk-upgrade design-system-extractor design-system-web-applier design-system-mobile-applier wcag-accessibility-checker ux-design ux-redesign cinematic-design-system; do
+for s in create-tickets implement-ticket review-ticket update-ticket commit-ticket commit-push-pr create-worktree merge-worktree feature-catalog cktk-upgrade design-system-extractor design-system-web-applier design-system-mobile-applier wcag-accessibility-checker ux-design ux-redesign cinematic-design-system; do
   cp -r /tmp/skills/$s .agent/skills/
 done
 rm -rf /tmp/skills
