@@ -35,6 +35,11 @@
       "description": "Create commit, push branch, and open a pull request"
     },
     {
+      "name": "create-worktree",
+      "path": ".agent/skills/create-worktree",
+      "description": "Create git worktrees for one or more tickets, each on its own branch under .worktrees/NNN-slug"
+    },
+    {
       "name": "feature-catalog",
       "path": ".agent/skills/feature-catalog",
       "description": "Explore a codebase and produce a user-facing feature catalog"

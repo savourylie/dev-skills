@@ -22,6 +22,7 @@ The Claude and Codex trees share support files where possible, but they do not s
 - `update-ticket` — change a ticket status, cascade dependency markers, refresh `docs/tickets/INDEX.md`, and commit the doc updates
 - `commit-ticket` — create a single git commit from the intended repo changes
 - `commit-push-pr` — create one commit, push the branch, and open a pull request
+- `create-worktree` — create git worktrees for one or more tickets under `.worktrees/NNN-slug/`, each on its own branch off a chosen base
 - `feature-catalog` — explore a codebase and produce a user-facing feature catalog
 - `cktk-upgrade` — pull the latest cktk skills from GitHub and update the local installation
 
@@ -80,13 +81,14 @@ After any installer-based install, restart Codex if the new skills do not appear
 
 #### Install all skills
 
-Use one installer request with all fifteen skill paths:
+Use one installer request with all sixteen skill paths:
 
 ```text
 $skill-installer install from https://github.com/savourylie/cktk with these paths:
 .agents/skills/create-tickets
 .agents/skills/commit-ticket
 .agents/skills/commit-push-pr
+.agents/skills/create-worktree
 .agents/skills/feature-catalog
 .agents/skills/implement-ticket
 .agents/skills/review-ticket
@@ -109,6 +111,7 @@ Use the GitHub directory URL for the specific skill you want:
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/create-tickets
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/commit-ticket
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/commit-push-pr
+$skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/create-worktree
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/feature-catalog
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/implement-ticket
 $skill-installer install https://github.com/savourylie/cktk/tree/main/.agents/skills/review-ticket
@@ -136,6 +139,8 @@ $review-ticket --pr 42
 $update-ticket TICKET-003 done
 $commit-ticket
 $commit-push-pr
+$create-worktree 7
+$create-worktree 7 8 9 dev
 $feature-catalog
 $cktk-upgrade
 $design-system-extractor
@@ -147,7 +152,7 @@ $ux-redesign
 $cinematic-design-system
 ```
 
-`review-ticket`, `feature-catalog`, `design-system-extractor`, `design-system-web-applier`, `design-system-mobile-applier`, and `wcag-accessibility-checker` also include descriptions suitable for Codex's implicit skill matching. The write-heavy workflows (`create-tickets`, `implement-ticket`, `update-ticket`, `commit-ticket`, `commit-push-pr`, `ux-design`, `ux-redesign`) remain explicit-only in their `agents/openai.yaml` policy.
+`review-ticket`, `feature-catalog`, `design-system-extractor`, `design-system-web-applier`, `design-system-mobile-applier`, and `wcag-accessibility-checker` also include descriptions suitable for Codex's implicit skill matching. The write-heavy workflows (`create-tickets`, `implement-ticket`, `update-ticket`, `commit-ticket`, `commit-push-pr`, `create-worktree`, `ux-design`, `ux-redesign`) remain explicit-only in their `agents/openai.yaml` policy.
 
 ## Claude Code Install
 
@@ -176,6 +181,10 @@ $cinematic-design-system
 
 /commit-ticket                     # Commit current changes
 /commit-push-pr                    # Commit, push, and open a PR
+
+/create-worktree 7                 # Worktree for ticket 007 off origin/main
+/create-worktree 7 8 9             # Worktrees for several tickets at once
+/create-worktree 7 dev             # Worktree based on origin/dev instead
 
 /feature-catalog                   # Generate feature catalog for current project
 
@@ -206,7 +215,7 @@ Or install skills directly from GitHub:
 curl -sL https://github.com/savourylie/cktk/archive/refs/heads/main.tar.gz \
   | tar xz --strip-components=1 -C /tmp cktk-main/skills
 mkdir -p .agent/skills
-for s in create-tickets implement-ticket review-ticket update-ticket commit-ticket commit-push-pr feature-catalog cktk-upgrade design-system-extractor design-system-web-applier design-system-mobile-applier wcag-accessibility-checker ux-design ux-redesign cinematic-design-system; do
+for s in create-tickets implement-ticket review-ticket update-ticket commit-ticket commit-push-pr create-worktree feature-catalog cktk-upgrade design-system-extractor design-system-web-applier design-system-mobile-applier wcag-accessibility-checker ux-design ux-redesign cinematic-design-system; do
   cp -r /tmp/skills/$s .agent/skills/
 done
 rm -rf /tmp/skills

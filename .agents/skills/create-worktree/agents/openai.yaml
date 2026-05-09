@@ -1,0 +1,7 @@
+interface:
+  display_name: "Create Worktree"
+  short_description: "Create git worktrees for one or more tickets, each on its own branch"
+  default_prompt: "Read the ticket files for the requested tickets, resolve a base branch (default main), and create a git worktree per ticket under .worktrees/NNN-slug on a fresh branch."
+
+policy:
+  allow_implicit_invocation: false
