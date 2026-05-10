@@ -58,6 +58,30 @@ These run once before touching any ticket. If any of them fail, stop the entire 
    - If local `<base>` doesn't exist (only `origin/<base>` was found): `git -C "$MAIN_ROOT" switch -c <base> origin/<base>`.
    - Then update local base to match origin: `git -C "$MAIN_ROOT" merge --ff-only origin/<base>` (skip if no `origin/<base>`). If the FF fails (local base has diverged from origin), abort and report — that's a real situation that needs human judgment, not a default decision.
 
+6. **Worktree dirty-state scan + auto-commit.** The natural cktk workflow is `/implement-ticket NNN worktree` → `/update-ticket NNN` → `/merge-worktree NNN`, which leaves implementation code uncommitted in the worktree (only ticket metadata gets committed by `/update-ticket`). Rather than refuse to merge, we detect this state up front and offer to commit it.
+
+   For each target ticket whose worktree exists on disk, run `git -C "<worktree_path>" status --porcelain`. If the output is non-empty, record the ticket plus a short summary of what's dirty — counts of modified / added / deleted / untracked files derived from the porcelain status codes (`M`/`A`/`D`/`??`) — into a "dirty worktrees" list.
+
+   If the dirty list is empty, proceed to Phase 4. Otherwise, present the list to the user in a single batched message and wait for confirmation:
+
+   ```
+   Found uncommitted changes in 2 worktree(s):
+
+     TICKET-007  3 modified, 1 untracked   (.worktrees/007-fix-search)
+     TICKET-009  1 modified                (.worktrees/009-add-export)
+
+   Auto-commit each before merging? [Y/n]
+   ```
+
+   - **If yes** (default): for each dirty worktree, in order:
+     1. Read the ticket title from `docs/tickets/NNN-*.md` (first H1 line) for commit-message context.
+     2. Inspect the changes: `git -C "<worktree_path>" diff HEAD` (and `git -C "<worktree_path>" status --porcelain` for untracked files).
+     3. Generate a single conventional-style commit message that reflects the changes — subject line ≤72 chars, referencing the ticket as `TICKET-NNN`. Don't pad with boilerplate; let the diff drive the message.
+     4. Stage and commit: `git -C "<worktree_path>" add -A` then `git -C "<worktree_path>" commit -m "<message>"`.
+     5. **If the commit fails** (e.g., a pre-commit hook blocks it), do **not** retry with `--no-verify`. Mark this ticket with an error and continue with the next dirty worktree — Phase 4 step 2 will then skip the merge for it because the worktree is still dirty.
+     6. Tag tickets that were committed here so Phase 5 can label them `auto-committed` in the report.
+   - **If no**: leave those worktrees alone. They'll be skipped naturally by Phase 4 step 2's defensive dirty check.
+
 ## Phase 4: Per-Ticket Merge and Cleanup
 
 Process tickets in the order given. Each ticket is independent — one ticket's failure should not stop the others.
@@ -66,7 +90,7 @@ For each `(NNN, slug, worktree_path, branch)`:
 
 1. **Already cleaned up?** If neither `<worktree_path>` exists on disk (and is registered in `git worktree list --porcelain`) nor the branch exists (`git rev-parse --verify --quiet <branch>` fails), record as "already cleaned up" and continue.
 
-2. **Worktree clean?** If the worktree exists, check `git -C "<worktree_path>" status --porcelain`. If non-empty, skip with a clear error (`uncommitted changes in <worktree_path>`) and continue with the next ticket. Never silently lose uncommitted work.
+2. **Worktree clean?** Defensive guard — by Phase 3 step 6 the worktree should already be clean (either it always was, or the user accepted the auto-commit prompt). If the worktree exists and `git -C "<worktree_path>" status --porcelain` is still non-empty, skip with `uncommitted changes in <worktree_path> — auto-commit was declined or failed` and continue with the next ticket. Never silently lose uncommitted work.
 
 3. **Already merged upstream?** Run `git -C "$MAIN_ROOT" merge-base --is-ancestor <branch> <base-ref>`. If exit code is 0, the branch is already in the base — typical post-PR-merge state. Skip the merge step and go straight to step 5.
 
@@ -85,16 +109,17 @@ For each `(NNN, slug, worktree_path, branch)`:
 Print a summary the user can scan at a glance:
 
 ```
-Merged 2 worktree(s) into dev:
+Merged 3 worktree(s) into dev:
 
-  TICKET-007  merged + cleaned up
-  TICKET-008  already merged upstream — cleaned up
-  TICKET-009  SKIPPED — uncommitted changes in .worktrees/009-fix-search
-  TICKET-010  CONFLICT — files: src/foo.ts, src/bar.ts (worktree retained)
+  TICKET-007  auto-committed + merged + cleaned up
+  TICKET-008  merged + cleaned up
+  TICKET-009  already merged upstream — cleaned up
+  TICKET-010  SKIPPED — uncommitted changes in .worktrees/010-fix-search (auto-commit declined or failed)
+  TICKET-011  CONFLICT — files: src/foo.ts, src/bar.ts (worktree retained)
 
 main checkout is now on: dev (<short-hash>)
 ```
 
-Group entries by outcome (merged, already-merged-and-cleaned, skipped, conflict, error) so the user immediately sees what needs follow-up.
+Group entries by outcome (auto-committed-and-merged, merged, already-merged-and-cleaned, skipped, conflict, error) so the user immediately sees what needs follow-up. Tickets where Phase 3 step 6 synthesized a commit get the `auto-committed` prefix so the user can audit those commits afterward if they want.
 
-Do not push to origin, do not delete the remote branch, and do not commit anything beyond the merge commits themselves. Push is a separate decision the user makes (often via `/commit-push-pr` or plain `git push`).
+Do not push to origin, and do not delete the remote branch. The only commits this skill ever creates are (a) the merge commits in Phase 4 and (b) the user-confirmed auto-commits in Phase 3 step 6. Push is a separate decision the user makes (often via `/commit-push-pr` or plain `git push`).
