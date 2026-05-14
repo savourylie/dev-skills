@@ -148,9 +148,18 @@ Make the following updates:
 1. Re-read `docs/tickets/INDEX.md`.
 2. Cross-check: count the statuses in each phase table and compare to the Summary table counts. If they don't match, fix them.
 3. Sanity check: ensure no ticket is listed as `pending` in INDEX.md while having unmet dependencies (i.e., dependencies without ` ✅`).
-4. Report to the user:
+4. **If the target status was `done`**, scan every phase table in INDEX.md and collect each row whose Status is `` `pending` ``. For each row, capture the ticket number and title, and note whether it appears in the Phase 4 "newly unblocked" list. Sort by ticket number ascending.
+5. Report to the user:
    - Which ticket was updated and to what status.
-   - Which tickets (if any) were unblocked as a result.
+   - **Tickets ready to work on** (only when the target status was `done`): a bulleted list of every `pending` ticket gathered in step 4. Annotate newly-unblocked entries with `(newly unblocked)` at the end of the line. Include the count in the section header. If zero tickets are pending, say so explicitly (e.g., `No tickets are currently ready — all remaining work is blocked, in-progress, or done.`). Format:
+
+     ```
+     ## Tickets ready to work on (N)
+     - TICKET-NNN — Title
+     - TICKET-NNN — Title (newly unblocked)
+     ```
+
+     These are the tickets you can pick up in parallel via `/create-worktree`.
    - Summary of current status counts.
 
 ## Phase 7: Commit

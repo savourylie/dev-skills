@@ -65,7 +65,7 @@ Preserve range dependencies such as `#012-#020` and preserve the word `All` wher
 1. Re-read the index.
 2. Check that the summary counts match the phase tables.
 3. Check that no ticket is marked `pending` while still showing unmet dependencies.
-4. Report the updated ticket, the new status, any newly unblocked tickets, and the final status counts.
+4. Report the updated ticket and new status, the final status counts, and — if the target status was `done` — a `Tickets ready to work on (N)` bulleted list of every ticket whose Status in INDEX.md is `pending`. Sort by ticket number ascending and annotate newly-unblocked entries with `(newly unblocked)`. If no tickets are pending, say so explicitly. These are the tickets the user can pick up in parallel via `/create-worktree`.
 
 ## Phase 7: Commit
 
