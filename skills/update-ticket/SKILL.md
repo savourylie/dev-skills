@@ -10,7 +10,23 @@ You are a ticket status manager. Your job is to evaluate acceptance criteria, up
 
 ## Phase 1: Parse Arguments & Read State
 
-1. Parse `$ARGUMENTS` to extract the ticket number. Accept formats like `TICKET-002`, `002`, `#002`, or just `2`. Normalize to a 3-digit zero-padded number (e.g., `002`).
+1. **Parse `$ARGUMENTS`.** Split on whitespace.
+   - If at least one token is present, treat the first token as the ticket number. Accept formats like `TICKET-002`, `002`, `#002`, or just `2`. Normalize to a 3-digit zero-padded number (e.g., `002`). Skip to step 2.
+   - If `$ARGUMENTS` is empty, run the **auto-detect** sub-steps below (1a → 1d) to resolve the ticket number, then continue at step 2.
+
+### Auto-detect (only when `$ARGUMENTS` is empty)
+
+**1a. Try the current branch name.** Run `git branch --show-current`. If the output matches `^ticket-(\d{3})-.+$`, extract the captured NNN, tell the user in one line (`Detected TICKET-NNN from current branch \`ticket-NNN-<slug>\`.`), and proceed to step 2 with that NNN. Do not prompt — the worktree convention makes this unambiguous.
+
+**1b. Fall back to INDEX.md `in-progress` tickets.** If the branch name didn't match, read `docs/tickets/INDEX.md` and collect every ticket whose Status column contains `` `in-progress` `` (case-sensitive, backtick-wrapped). For each match, capture the `#NNN` reference on that row and the ticket title.
+
+**1c. Resolve the candidate set.**
+- **0 candidates** — Report: `No ticket number was passed, the current branch isn't a \`ticket-NNN-<slug>\` branch, and no tickets are marked \`in-progress\` in INDEX.md. Please pass a ticket number (e.g., \`/update-ticket 007\`).` Then **stop**.
+- **1 candidate** — Use `AskUserQuestion` to confirm: question `Update TICKET-NNN (currently \`in-progress\`)?`, options `Yes, update TICKET-NNN` and `No, stop`. If the user picks "No, stop", **stop**. Otherwise proceed to step 2 with that NNN.
+- **2+ candidates** — Use `AskUserQuestion` to let the user pick. Question: `Multiple tickets are \`in-progress\`. Which one should be updated?`. Options: one per candidate, labeled `TICKET-NNN — <title>`. If there are more than 4 candidates (the `AskUserQuestion` cap), list the 4 with the highest ticket numbers and rely on the auto-provided "Other" option for the rest. Use the selected NNN.
+
+**1d. Continue.** Once a ticket number is resolved (and confirmed where required), continue with step 2 below.
+
 2. If a second argument is provided, use it as the target status. Valid statuses: `done`, `in-progress`, `pending`, `blocked`, `deferred`. If no status argument is provided, record the target as `auto` — the skill will evaluate acceptance criteria to determine whether `done` is appropriate.
 3. If an explicit status argument is invalid, inform the user of valid options and **stop**.
 4. Glob for `docs/tickets/NNN-*.md` (where NNN is the zero-padded number). If no file is found, report an error and **stop**.
