@@ -1,6 +1,6 @@
 ---
 name: merge-worktree
-description: "Merge one or more ticket worktrees back into their base branch, then remove the worktree directory and delete the local branch. The cleanup half of /create-worktree. Detects already-merged branches (e.g., merged via GitHub PR) and just cleans up in that case. Auto-commits any uncommitted implementation code in the worktree before merging (interactive Y/n prompt, defaults to yes) — users do NOT need to run /commit-ticket or git commit before /merge-worktree. Triggers on: /merge-worktree, merge worktree, finish ticket worktree, land worktree, clean up worktree after ticket, remove worktree after merging, done with ticket worktree, ticket worktree finished"
+description: "Merge one or more ticket worktrees back into their base branch, then remove the worktree directory and delete the local branch. The cleanup half of /create-worktree. Detects already-merged branches (e.g., merged via GitHub PR) and just cleans up in that case. Auto-commits any uncommitted implementation code in the worktree before merging (interactive Y/n prompt, defaults to yes) — users do NOT need to run /commit-ticket or git commit before /merge-worktree. Pass `no-cleanup` to keep the local branch around after merging (worktree directory is still removed). Triggers on: /merge-worktree, merge worktree, finish ticket worktree, land worktree, clean up worktree after ticket, remove worktree after merging, done with ticket worktree, ticket worktree finished"
 user-invocable: true
 ---
 
@@ -13,18 +13,21 @@ Close the loop on `/create-worktree`. Merge each ticket's branch back into its b
 Use the same rule as `/create-worktree` so users don't have to learn two grammars. Split `$ARGUMENTS` on whitespace and classify each token:
 
 - **Ticket number** — matches `^\d+$`, `^#\d+$`, or `^TICKET-\d+$` (case-insensitive). Normalize to a 3-digit zero-padded number.
-- **Base branch** — anything else. At most one base-branch token. Two or more non-ticket tokens → report the conflict and stop.
+- **`no-cleanup` flag** — matches `^no-cleanup$` (case-insensitive). When set, the local branch is preserved after merging (the worktree directory is still removed). Duplicates are ignored. Does **not** consume the base-branch slot.
+- **Base branch** — anything else. At most one base-branch token. Two or more non-ticket, non-flag tokens → report the conflict and stop.
 
 If no ticket numbers are provided, ask the user for at least one and stop. If no base-branch token is provided, default the base to `main`.
 
 Examples:
 
-| Invocation | Tickets | Base |
-| --- | --- | --- |
-| `/merge-worktree 7` | 007 | main |
-| `/merge-worktree 7 8 9` | 007, 008, 009 | main |
-| `/merge-worktree 7 dev` | 007 | dev |
-| `/merge-worktree TICKET-007 release-2026` | 007 | release-2026 |
+| Invocation | Tickets | Base | no-cleanup |
+| --- | --- | --- | --- |
+| `/merge-worktree 7` | 007 | main | no |
+| `/merge-worktree 7 8 9` | 007, 008, 009 | main | no |
+| `/merge-worktree 7 dev` | 007 | dev | no |
+| `/merge-worktree TICKET-007 release-2026` | 007 | release-2026 | no |
+| `/merge-worktree 7 no-cleanup` | 007 | main | yes |
+| `/merge-worktree 7 dev no-cleanup` | 007 | dev | yes |
 
 ## Phase 2: Resolve the Main Repo Root and Tickets
 
@@ -99,27 +102,28 @@ For each `(NNN, slug, worktree_path, branch)`:
    - **On other failure**: record the error, skip cleanup for this ticket, continue.
 
 5. **Cleanup.**
-   - `git -C "$MAIN_ROOT" worktree remove <worktree_path>` — removes the directory and unregisters the worktree.
-   - `git -C "$MAIN_ROOT" branch -d <branch>` — safe delete. After our merge (or the upstream merge we detected) the branch is fully merged into HEAD, so `-d` will succeed.
-   - If `worktree remove` fails because the worktree is missing on disk but registered, run `git -C "$MAIN_ROOT" worktree prune` and retry once.
-   - If `branch -d` fails for any reason, do NOT fall back to `-D` — leave the branch and record the failure for the report. Forcing could lose unmerged work.
+   - `git -C "$MAIN_ROOT" worktree remove <worktree_path>` — removes the directory and unregisters the worktree. If it fails because the worktree is missing on disk but still registered, run `git -C "$MAIN_ROOT" worktree prune` and retry once.
+   - If the `no-cleanup` flag was passed, stop here: leave the local branch in place and record `branch retained (no-cleanup)` for the report.
+   - Otherwise: `git -C "$MAIN_ROOT" branch -D <branch>`. Force-delete is intentional and safe here — we only reach this step when the merge is confirmed, either via step 3's `--is-ancestor` check or step 4's successful `merge --no-ff`. In both cases the branch's content is in the base, so there's no unmerged work to lose. This is the fix for the common GitHub squash-/rebase-merge case, where the local branch tip is no longer a strict ancestor of the merged base and `git branch -d` would refuse.
+   - If `branch -D` still fails (unexpected — e.g., another worktree references the branch), record the failure for the report and continue with the next ticket.
 
 ## Phase 5: Report
 
 Print a summary the user can scan at a glance:
 
 ```
-Merged 3 worktree(s) into dev:
+Merged 4 worktree(s) into dev:
 
   TICKET-007  auto-committed + merged + cleaned up
   TICKET-008  merged + cleaned up
   TICKET-009  already merged upstream — cleaned up
-  TICKET-010  SKIPPED — uncommitted changes in .worktrees/010-fix-search (auto-commit declined or failed)
-  TICKET-011  CONFLICT — files: src/foo.ts, src/bar.ts (worktree retained)
+  TICKET-010  merged + worktree removed — branch retained (no-cleanup)
+  TICKET-011  SKIPPED — uncommitted changes in .worktrees/011-fix-search (auto-commit declined or failed)
+  TICKET-012  CONFLICT — files: src/foo.ts, src/bar.ts (worktree retained)
 
 main checkout is now on: dev (<short-hash>)
 ```
 
-Group entries by outcome (auto-committed-and-merged, merged, already-merged-and-cleaned, skipped, conflict, error) so the user immediately sees what needs follow-up. Tickets where Phase 3 step 6 synthesized a commit get the `auto-committed` prefix so the user can audit those commits afterward if they want.
+Group entries by outcome (auto-committed-and-merged, merged-and-cleaned, already-merged-and-cleaned, branch-retained-by-flag, skipped, conflict, error) so the user immediately sees what needs follow-up. Tickets where Phase 3 step 6 synthesized a commit get the `auto-committed` prefix so the user can audit those commits afterward if they want. The `branch retained (no-cleanup)` label is informational — the user asked for it explicitly via the flag, so it does not need follow-up.
 
 Do not push to origin, and do not delete the remote branch. The only commits this skill ever creates are (a) the merge commits in Phase 4 and (b) the user-confirmed auto-commits in Phase 3 step 6. Push is a separate decision the user makes (often via `/commit-push-pr` or plain `git push`).

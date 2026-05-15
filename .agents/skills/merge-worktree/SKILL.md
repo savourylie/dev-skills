@@ -1,27 +1,30 @@
 ---
 name: "merge-worktree"
-description: "Use when the user explicitly asks to merge one or more ticket worktrees back into their base branch and clean them up (the cleanup half of $create-worktree). Prefer explicit invocation with $merge-worktree."
+description: "Use when the user explicitly asks to merge one or more ticket worktrees back into their base branch and clean them up (the cleanup half of $create-worktree). Pass `no-cleanup` to keep the local branch around after merging (worktree directory is still removed). Prefer explicit invocation with $merge-worktree."
 ---
 
 # Merge Worktrees Back Into Base
 
 Close the loop on `$create-worktree`: merge each ticket's branch into its base, then remove the worktree directory and delete the local branch. Detect already-merged branches (typical after a GitHub PR merge) and skip straight to cleanup so we don't create a redundant merge commit. Treat this as an explicit workflow skill because it mutates the working tree, deletes branches, and creates merge commits.
 
-Parse any text that follows the skill invocation as arguments. Accept ticket identifiers like `TICKET-002`, `002`, `#002`, or `2`. Accept one optional non-ticket token as the base branch. Default base is `main`.
+Parse any text that follows the skill invocation as arguments. Accept ticket identifiers like `TICKET-002`, `002`, `#002`, or `2`. Accept one optional non-ticket, non-flag token as the base branch. Accept the literal flag `no-cleanup` to preserve the local branch after merging. Default base is `main`.
 
 ## Phase 1: Parse Arguments
 
 1. Split the argument string on whitespace.
 2. Classify each token:
    - **Ticket number** if it matches `^\d+$`, `^#\d+$`, or `^TICKET-\d+$` (case-insensitive). Normalize to a 3-digit zero-padded number.
-   - **Base branch** otherwise. At most one such token; if two or more, report the conflict and stop.
+   - **`no-cleanup` flag** if it matches `^no-cleanup$` (case-insensitive). When set, the local branch is preserved after merging (the worktree directory is still removed). Duplicates are ignored. Does not consume the base-branch slot.
+   - **Base branch** otherwise. At most one such token; if two or more non-ticket, non-flag tokens, report the conflict and stop.
 3. Require at least one ticket number; if none, ask the user and stop.
 4. Default base is `main` if no base-branch token was given.
 
 Examples:
-- `$merge-worktree 7` → tickets `[007]`, base `main`
-- `$merge-worktree 7 8 9` → tickets `[007, 008, 009]`, base `main`
-- `$merge-worktree 7 dev` → tickets `[007]`, base `dev`
+- `$merge-worktree 7` → tickets `[007]`, base `main`, no-cleanup `false`
+- `$merge-worktree 7 8 9` → tickets `[007, 008, 009]`, base `main`, no-cleanup `false`
+- `$merge-worktree 7 dev` → tickets `[007]`, base `dev`, no-cleanup `false`
+- `$merge-worktree 7 no-cleanup` → tickets `[007]`, base `main`, no-cleanup `true`
+- `$merge-worktree 7 dev no-cleanup` → tickets `[007]`, base `dev`, no-cleanup `true`
 
 ## Phase 2: Resolve Repo Root and Tickets
 
@@ -59,15 +62,16 @@ For each ticket:
    - On other failure: record the error, skip cleanup, continue.
 5. **Cleanup.**
    - `git -C "$MAIN_ROOT" worktree remove <worktree_path>` (run `git worktree prune` and retry once if it complains the dir is missing on disk).
-   - `git -C "$MAIN_ROOT" branch -d <branch>`. Do NOT fall back to `-D` if `-d` fails — record the failure and let the user decide.
+   - If `no-cleanup` was passed, stop here and record `branch retained (no-cleanup)`. Otherwise `git -C "$MAIN_ROOT" branch -D <branch>` — force-delete is safe and intentional because step 3's `--is-ancestor` check or step 4's successful merge has already established the branch's content is in the base. This avoids the common GitHub squash-/rebase-merge failure where `git branch -d` would refuse.
 
 ## Phase 5: Report
 
-Print a per-ticket summary grouped by outcome (merged, already-merged-and-cleaned, skipped, conflict, error), and the final HEAD of the main checkout. Do not push to origin, do not delete remote branches, do not commit anything beyond the merge commits themselves.
+Print a per-ticket summary grouped by outcome (merged-and-cleaned, already-merged-and-cleaned, branch-retained-by-flag, skipped, conflict, error), and the final HEAD of the main checkout. The `branch retained (no-cleanup)` label is informational — the user asked for it explicitly via the flag. Do not push to origin, do not delete remote branches, do not commit anything beyond the merge commits themselves.
 
 ## Safety Rules
 
 - Stop the whole batch up front if any ticket file is missing or any pre-flight check fails. Partial cleanup hides typos and leaves an inconsistent state.
-- Never run `git branch -D` or `git worktree remove --force` as a fallback for a normal failure — these can lose unmerged work without warning.
+- `git branch -D` is the intended branch-delete in Phase 4 step 5. It is safe there because step 3 (`--is-ancestor`) or step 4 (`merge --no-ff`) has already established the branch's content is in the base. Do not use `-D` anywhere else in the flow.
+- Never run `git worktree remove --force` as a fallback for a normal failure — it can lose uncommitted work without warning. Use `git worktree prune` + retry instead.
 - Never push, never delete remote branches.
 - Never modify the worktree's contents — only inspect status, then merge into base from the main checkout.
