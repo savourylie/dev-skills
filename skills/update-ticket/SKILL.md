@@ -160,6 +160,14 @@ Make the following updates:
      ```
 
      These are the tickets you can pick up in parallel via `/create-worktree`.
+   - **Next step for this ticket** (only when the target status was `done` AND `git branch --show-current` returns `ticket-NNN-<slug>` matching the ticket just updated — i.e. we're sitting in the worktree for this ticket): tell the user the next step is `/merge-worktree NNN` (append the non-default base branch if one is in use). Explicitly note that `/merge-worktree` will auto-commit any remaining uncommitted implementation code in the worktree before merging, so the user does NOT need to run `/commit-ticket` or `git commit` first. Format:
+
+     ```
+     ## Next step
+     Run `/merge-worktree NNN` to land this ticket. It will auto-commit any uncommitted implementation code in the worktree before merging into <base> — you do not need to commit first.
+     ```
+
+     Skip this bullet entirely if the current branch doesn't match the `ticket-NNN-<slug>` pattern for the ticket just updated, or if the target status wasn't `done`.
    - Summary of current status counts.
 
 ## Phase 7: Commit

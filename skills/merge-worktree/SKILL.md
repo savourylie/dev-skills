@@ -1,6 +1,6 @@
 ---
 name: merge-worktree
-description: "Merge one or more ticket worktrees back into their base branch, then remove the worktree directory and delete the local branch. The cleanup half of /create-worktree. Detects already-merged branches (e.g., merged via GitHub PR) and just cleans up in that case. Triggers on: /merge-worktree, merge worktree, finish ticket worktree, land worktree, clean up worktree after ticket, remove worktree after merging, done with ticket worktree, ticket worktree finished"
+description: "Merge one or more ticket worktrees back into their base branch, then remove the worktree directory and delete the local branch. The cleanup half of /create-worktree. Detects already-merged branches (e.g., merged via GitHub PR) and just cleans up in that case. Auto-commits any uncommitted implementation code in the worktree before merging (interactive Y/n prompt, defaults to yes) — users do NOT need to run /commit-ticket or git commit before /merge-worktree. Triggers on: /merge-worktree, merge worktree, finish ticket worktree, land worktree, clean up worktree after ticket, remove worktree after merging, done with ticket worktree, ticket worktree finished"
 user-invocable: true
 ---
 
