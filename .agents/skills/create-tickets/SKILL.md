@@ -1,59 +1,76 @@
 ---
 name: create-tickets
-description: "Generate dev tickets from requirements documents. Use when the user provides a PRD, product spec, or requirements doc and wants tickets created, or asks to break down requirements into development work items. Prefer explicit invocation with $create-tickets."
+description: "Generate dev tickets from requirements documents or extend an existing project with new features. Use when the user provides a PRD, product spec, or requirements doc and wants tickets created; provides a FEATURES catalog to add new features to an existing project; or asks to break down requirements into development work items. Prefer explicit invocation with $create-tickets."
 ---
 
 **Argument:** `$ARGUMENTS`
 
-Turn a PRD and optional design/UX/reference documents into well-ordered development tickets.
+Turn a PRD or FEATURES catalog (and optional design/UX/reference inputs) into well-ordered development tickets, or extend an existing ticket project with new features.
 
 ## Inputs
 
 Arguments are key-value pairs separated by spaces:
 
-- `PRD: <file_path>` — exactly one path to the product requirements document (auto-detected if omitted)
-- `DESIGN: <path> [<path> …]` — one or more optional design/architecture documents
-- `UX: <path> [<path> …]` — one or more optional UX specification documents
-- `MISC: <path> [<path> …]` — one or more optional additional reference files
+- `PRD: <file_path>` — exactly one path to the product requirements document (auto-detected if omitted; mutually exclusive with `FEATURES:`)
+- `FEATURES: <file_path>` — exactly one path to a feature catalog; appends new tickets to an existing project (mutually exclusive with `PRD:`)
+- `DESIGN: <input> [<input> …]` — one or more design inputs: file path, directory path, or URL
+- `UX: <input> [<input> …]` — one or more UX specification inputs: file path, directory path, or URL
+- `MISC: <input> [<input> …]` — one or more additional reference inputs: file path, directory path, or URL
 
 ## Phase 1: Gather Inputs
 
-1. Parse `$ARGUMENTS` by splitting on whitespace and walking tokens left-to-right. A token that is exactly `PRD:`, `DESIGN:`, `UX:`, or `MISC:` (case-insensitive, colon included, nothing else) opens a new section; every subsequent non-key token is appended to that section's file list. `PRD:` accepts exactly one file path; `DESIGN:`, `UX:`, and `MISC:` each accept one or more.
+1. Parse `$ARGUMENTS`: tokenize on whitespace. Tokens exactly matching `PRD:`, `FEATURES:`, `DESIGN:`, `UX:`, or `MISC:` (case-insensitive, colon included) open a new section; all subsequent non-key tokens append to that section. `PRD:` and `FEATURES:` accept exactly one value each; if both are passed, error and stop ("pass one or the other, not both"). `DESIGN:`, `UX:`, and `MISC:` accept one or more inputs. A key with no values is an error.
 
-2. If no `PRD:` given, auto-detect:
+2. **Mode**: If `FEATURES:` is present → FEATURES mode (append to existing project). Otherwise → PRD mode (greenfield).
+
+3. **PRD mode** — if no `PRD:` given, auto-detect:
    a. Glob `docs/tickets/PRDv*.md` → highest version number
    b. Fall back to `docs/tickets/PRD.md`
    c. Fall back to `docs/PRD.md`
-   d. If nothing found → error and stop
+   d. Nothing found → error and stop
 
-3. Create `docs/tickets/` if it does not exist.
+4. **PRD mode** — create `docs/tickets/` if it does not exist. If `NNN-*.md` ticket files already exist, ask: overwrite (restart at 001), append (continue from `max_num + 1`), or abort.
 
-4. If `NNN-*.md` ticket files already exist in `docs/tickets/`, ask the user: overwrite, append (start from next number), or abort.
+5. **FEATURES mode** — verify the `FEATURES:` file exists, `docs/tickets/` contains at least one `NNN-*.md` file, and `docs/tickets/INDEX.md` exists. Error and stop if any check fails. Detect numbering width and `max_num` from existing files; new tickets start at `max_num + 1` with the same zero-padding width.
 
-5. Read all input files plus `CLAUDE.md` at project root if present.
+6. Read all inputs plus `CLAUDE.md` at the project root if present. In FEATURES mode, also read every existing `docs/tickets/NNN-*.md` and `docs/tickets/INDEX.md`.
+
+   **Input Types** — for each value in a DESIGN, UX, or MISC list:
+
+   | Pattern | How to read |
+   |---|---|
+   | Starts with `http://` or `https://` | WebFetch. On 4xx or empty body: print "Claude Design share URLs are session-gated — export the handoff bundle to `./system-design/` and re-run, or pass a PDF or HTML export instead." and stop. |
+   | Directory path | Enumerate children; read `.md`, `.txt`, `.html`, `.json`, `.css`, `.svg`, `.png/.jpg/.jpeg/.webp`. For a Claude Design handoff bundle: `*.md` first, then `*.html`, then `screenshots/` images, then `*.json`/`*.css`. Read images multimodally. Skip unknown binaries with a one-line note. |
+   | `.md`, `.txt`, `.html`, `.json`, `.css`, `.svg` | Read as text. |
+   | `.pdf` | Read; page through in 10-page chunks if >10 pages. |
+   | `.pptx` | Delegate to `document-skills:pptx`; if unavailable, stop with "Re-export as PDF or HTML and re-run." |
+   | `.png`, `.jpg`, `.jpeg`, `.webp` | Read multimodally. |
+   | Non-existent file path | Error and stop. |
 
 ## Phase 2: Analyze & Plan
 
-Read all input files. Identify features, infrastructure concerns, design constraints, open questions (note as assumptions), and out-of-scope items.
+Read all inputs. Identify features, infrastructure concerns, design constraints, open questions (note as assumptions), and out-of-scope items.
 
 Build a dependency graph:
 1. What must exist first? (scaffolding, tokens, data models)
 2. What depends on what?
 3. What can be parallelized?
 
-Group into phases: Foundation → Core Features → Polish & QA. Add more phases if warranted.
+**PRD mode**: group into phases: Foundation → Core Features → Polish & QA.
 
-Plan checkpoint placement:
+**FEATURES mode**: build an inventory of what existing tickets already deliver. Walk the FEATURES catalog feature-by-feature: classify each as "already covered" (skip), "partially covered" (ticket only the gap), or "not covered" (new tickets). New tickets may depend on existing ones by their existing number.
+
+Plan checkpoint placement (both modes):
 - **Feature checkpoints** after each group of 2–5 tickets that deliver a testable outcome
-- **Phase checkpoints** at the end of each phase (gate to next phase; can double as feature checkpoint if it covers the full phase)
-- **Final end-to-end checkpoint** as the very last ticket (replaces QA/polish pass)
-- Checkpoints are dependencies: subsequent tickets require the checkpoint to pass
+- **Phase checkpoints** at the end of each phase (gate to next phase)
+- **Final end-to-end checkpoint** as the very last ticket in PRD mode; continue the checkpoint sequence in FEATURES mode
+- Checkpoints are dependencies: subsequent tickets require the checkpoint
 
 ## Phase 3: Write Ticket Files
 
 Read `./references/TEMPLATE.md` for the format.
 
-Each ticket = one focused day of work. File naming: `NNN-kebab-case-title.md` in `docs/tickets/`.
+Each ticket = one focused day of work. File naming: `NNN-kebab-case-title.md` in `docs/tickets/`. Use 3-digit padding in PRD+Overwrite; preserve detected width in FEATURES mode and PRD+Append.
 
 Rules:
 - Header: `# [TICKET-NNN] Title`
@@ -80,25 +97,23 @@ Read `./references/TEMPLATE.md` — "Checkpoint Ticket Variant" section. For eac
 
 Read `./references/INDEX.md` for the format.
 
-Generate `docs/tickets/INDEX.md` with:
-- Today's date
-- Summary table with emoji status markers (✅ Done, 🔧 In Progress, 📋 Pending, 🚫 Blocked, ⏸️ Deferred)
-- Phase tables: number, linked title, backtick-wrapped status, dependencies, notes
-- Checkpoint rows: bold link `[**TEST: Checkpoint N — Title**](./NNN-test-...)`, Notes = `Gate: Phase N`
-- Status key
+**PRD mode (or PRD+Overwrite)**: generate `docs/tickets/INDEX.md` from scratch with today's date, summary table (emoji status markers), phase tables (number, linked title, backtick-wrapped status, dependencies, notes), checkpoint rows in bold with `Gate: Phase N` in Notes, and a status key.
+
+**FEATURES mode (or PRD+Append)**: do **not** overwrite `INDEX.md`. Merge new rows: preserve all existing rows/statuses; extend the last phase table or add a new `## Phase N — [theme]` section above the Status Key; recount the Summary; update the date (with an optional parenthetical like `(added TICKET-015 through TICKET-021)`).
 
 ## Phase 5: Self-Review
 
 Review ALL tickets for:
-1. Dependency ordering issues (circular deps, missing deps)
+1. Dependency ordering issues (circular, missing, or non-existent deps)
 2. Missing acceptance criteria (<2 or vague)
 3. Scope creep (>3 files or >5 criteria → split)
-4. Gaps (PRD features with no ticket, missing infrastructure)
-5. Checkpoint coverage (every phase has one, final ticket is a checkpoint, gate deps correct, criteria are pass/fail)
+4. Gaps (PRD/FEATURES entries with no ticket, missing infrastructure)
+5. Checkpoint coverage (every phase has one, final ticket is a checkpoint in PRD mode, gate deps correct, criteria are pass/fail)
 6. Consistency (template format, status correctness, INDEX accuracy, checkpoint rows bold with `Gate:` notes)
+7. **Append-mode checks** (FEATURES mode and PRD+Append): new tickets continue from `max_num + 1` with the detected width; no existing files modified; INDEX merged not rewritten; no duplicate coverage.
 
 Fix any problems found. Update both ticket files and INDEX.md.
 
 ## Phase 6: Summary
 
-Report: ticket count (implementation + checkpoint), phase grouping with checkpoint gates, assumptions made, path to INDEX.md. Suggest `/implement-ticket 001` to start.
+Report: mode (PRD greenfield or FEATURES append), ticket count (implementation + checkpoint), phase grouping with checkpoint gates, assumptions made, path to INDEX.md. In FEATURES mode, list which FEATURES catalog entries were skipped (already covered by existing tickets). Suggest `$implement-ticket 001` for greenfield or `$implement-ticket <first new number>` for append.

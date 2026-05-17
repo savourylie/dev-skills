@@ -20,7 +20,7 @@ Explain what this ticket accomplishes and why it matters at this point in the se
 - [ ] Criterion 3
 
 ## Design Reference
-> Relevant sections from DESIGN.md. Delete this section for non-UI tickets.
+> Relevant sections from design inputs. Can cite DESIGN.md headings, directory file paths (`system-design/screenshots/hero.png`), page references (`design.pdf p.4`), or Claude Design artifact IDs. Delete this section for non-UI tickets.
 
 - **Tokens**: § Tokens > Colors, Typography
 - **Components**: § Components > Buttons

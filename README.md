@@ -135,6 +135,9 @@ Prefer explicit skill invocation for deterministic behavior:
 
 ```text
 $create-tickets PRD:docs/PRD.md DESIGN:docs/DESIGN.md
+$create-tickets PRD:docs/PRD.md DESIGN:https://api.anthropic.com/v1/design/h/abc123
+$create-tickets PRD:docs/PRD.md DESIGN:system-design/
+$create-tickets FEATURES:docs/FEATURES.md
 $implement-ticket TICKET-003
 $implement-ticket TICKET-003 worktree
 $implement-ticket TICKET-003 worktree dev
@@ -173,6 +176,10 @@ $cinematic-design-system
 ```text
 /create-tickets PRD:docs/PRD.md    # Generate tickets from a PRD
 /create-tickets PRD:docs/PRD.md DESIGN:docs/DESIGN.md UX:docs/UX.md
+/create-tickets PRD:docs/PRD.md DESIGN:https://api.anthropic.com/v1/design/h/abc123   # Claude Design URL
+/create-tickets PRD:docs/PRD.md DESIGN:system-design/   # Claude Design handoff bundle folder
+/create-tickets PRD:docs/PRD.md DESIGN:docs/mockups.pdf UX:docs/flows.pptx
+/create-tickets FEATURES:docs/FEATURES.md   # Append new features to existing project
 /create-tickets                    # Auto-detects PRD in docs/tickets/
 
 /implement-ticket 003              # Implement a specific ticket

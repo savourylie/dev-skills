@@ -16,9 +16,9 @@ Arguments are key-value pairs separated by spaces. Keys are case-insensitive.
 | --- | --- | --- |
 | `PRD: <file_path>` | PRD mode only (or auto-detected) | Exactly one path to the product requirements document |
 | `FEATURES: <file_path>` | FEATURES mode only | Exactly one path to a feature catalog; adds new features to an existing project |
-| `DESIGN: <path> [<path> …]` | No | One or more paths to design/architecture documents |
-| `UX: <path> [<path> …]` | No | One or more paths to UX specification documents |
-| `MISC: <path> [<path> …]` | No | One or more paths to additional reference files |
+| `DESIGN: <input> [<input> …]` | No | One or more design inputs — file path, directory path, or URL (see Input Types in Phase 1) |
+| `UX: <input> [<input> …]` | No | One or more UX inputs — file path, directory path, or URL (see Input Types in Phase 1) |
+| `MISC: <input> [<input> …]` | No | One or more reference inputs — file path, directory path, or URL (see Input Types in Phase 1) |
 
 ### Modes
 
@@ -33,6 +33,8 @@ This skill has two modes, chosen by which of `PRD:` or `FEATURES:` is passed:
 ```
 /create-tickets PRD: docs/PRD.md DESIGN: docs/DESIGN.md
 /create-tickets PRD: docs/PRD.md UX: docs/UX_DESIGN.md docs/WIREFRAMES.md MISC: docs/API.md docs/MIGRATION.md
+/create-tickets PRD: docs/PRD.md DESIGN: https://api.anthropic.com/v1/design/h/abc123
+/create-tickets PRD: docs/PRD.md DESIGN: system-design/ docs/legacy-spec.pdf
 /create-tickets
 /create-tickets FEATURES: docs/FEATURES.md
 /create-tickets FEATURES: docs/FEATURES.md DESIGN: docs/DESIGN.md docs/ARCHITECTURE.md
@@ -40,7 +42,7 @@ This skill has two modes, chosen by which of `PRD:` or `FEATURES:` is passed:
 
 ## Phase 1: Gather Inputs
 
-1. Parse `$ARGUMENTS` by splitting on whitespace and walking tokens left-to-right. A token that is exactly `PRD:`, `FEATURES:`, `DESIGN:`, `UX:`, or `MISC:` (case-insensitive, colon included, nothing else) opens a new section; every subsequent token that does not match a key is appended to that section's file list. If a token appears before any key, error and stop. `PRD:` and `FEATURES:` accept exactly one file path each — error if more are provided. `DESIGN:`, `UX:`, and `MISC:` accept one or more file paths. A key with no following paths is also an error.
+1. Parse `$ARGUMENTS` by splitting on whitespace and walking tokens left-to-right. A token that is exactly `PRD:`, `FEATURES:`, `DESIGN:`, `UX:`, or `MISC:` (case-insensitive, colon included, nothing else) opens a new section; every subsequent token that does not match a key is appended to that section's input list. If a token appears before any key, error and stop. `PRD:` and `FEATURES:` accept exactly one file path each — error if more are provided. `DESIGN:`, `UX:`, and `MISC:` accept one or more inputs (file paths, directory paths, or URLs — see Input Types in step 6). A key with no following inputs is also an error.
 
 2. **Mode detection**:
    - If a `FEATURES:` argument is present → **FEATURES mode**. If `PRD:` is also present, report the conflict ("FEATURES mode is for appending to existing projects; PRD mode is for greenfield — pass one or the other, not both") and **stop**.
@@ -70,11 +72,22 @@ This skill has two modes, chosen by which of `PRD:` or `FEATURES:` is passed:
    - New tickets begin at `max_num + 1`, zero-padded to `width` digits.
    - For checkpoint numbering, grep `docs/tickets/*.md` and `docs/tickets/INDEX.md` for `Checkpoint N` and `TEST: Checkpoint N`. The next checkpoint number is `max_found + 1` (or `0` if none found).
 
-6. Read all input files:
-   - **PRD mode**: the PRD (required); all DESIGN, UX, and MISC files (one or more each, if provided); `CLAUDE.md` at the project root (if it exists) — for tech stack constraints, coding standards, and architectural decisions that affect how tickets are scoped.
-   - **FEATURES mode**: the FEATURES file (required); every existing `docs/tickets/NNN-*.md` file (required — needed to detect which features are already built); `docs/tickets/INDEX.md` (required); all DESIGN, UX, and MISC files (one or more each, if provided); `CLAUDE.md` at the project root (if it exists).
+6. Read all inputs:
+   - **PRD mode**: the PRD (required); all DESIGN, UX, and MISC inputs (one or more each, if provided); `CLAUDE.md` at the project root (if it exists) — for tech stack constraints, coding standards, and architectural decisions that affect how tickets are scoped.
+   - **FEATURES mode**: the FEATURES file (required); every existing `docs/tickets/NNN-*.md` file (required — needed to detect which features are already built); `docs/tickets/INDEX.md` (required); all DESIGN, UX, and MISC inputs (one or more each, if provided); `CLAUDE.md` at the project root (if it exists).
 
-7. If any specified file path does not exist, report the error and **stop**.
+   **Input Types** — for each value in a DESIGN, UX, or MISC list, determine how to read it:
+
+   | Pattern | How to read |
+   |---|---|
+   | Starts with `http://` or `https://` | Use WebFetch. If the response is a 4xx error or empty body, print: "Claude Design share URLs are session-gated — export the handoff bundle to `./system-design/` and re-run, or pass a PDF or HTML export instead." and **stop**. |
+   | Path resolves to a directory | Enumerate immediate children. Read every `.md`, `.txt`, `.html`, `.json`, `.css`, `.svg`, `.png`, `.jpg`, `.jpeg`, `.webp` file. For a Claude Design handoff bundle, prioritize: `design-notes.md` and top-level `*.md` first (intent), then `*.html` (layout and inline tokens), then images in `screenshots/` and top-level images (visual truth), then `*.json`/`*.css`. Read image files multimodally. Skip unknown binaries (e.g., `.zip`, `.mov`) with a one-line note. |
+   | File ending in `.md`, `.txt`, `.html`, `.json`, `.css`, `.svg` | Read as text with the Read tool. |
+   | File ending in `.pdf` | Read with the Read tool. If the file exceeds 10 pages, page through it (`pages: "1-10"`, `"11-20"`, …) until all pages are covered. |
+   | File ending in `.pptx` | Delegate to the `document-skills:pptx` skill to extract slide content and notes. If that skill is unavailable, stop with: "PPTX extraction requires document-skills:pptx — re-export as PDF or HTML and re-run." |
+   | File ending in `.png`, `.jpg`, `.jpeg`, `.webp` | Read multimodally as an image with the Read tool. |
+
+7. If any specified file path (non-URL, non-directory) does not exist, report the error and **stop**.
 
 ## Phase 2: Analyze & Plan
 
