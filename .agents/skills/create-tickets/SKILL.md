@@ -11,14 +11,14 @@ Turn a PRD and optional design/UX/reference documents into well-ordered developm
 
 Arguments are key-value pairs separated by spaces:
 
-- `PRD:<file_path>` — path to the product requirements document (auto-detected if omitted)
-- `DESIGN:<file_path>` — optional design/architecture document
-- `UX:<file_path>` — optional UX specification
-- `MISC:<path1>,<path2>` — optional comma-separated reference files
+- `PRD: <file_path>` — exactly one path to the product requirements document (auto-detected if omitted)
+- `DESIGN: <path> [<path> …]` — one or more optional design/architecture documents
+- `UX: <path> [<path> …]` — one or more optional UX specification documents
+- `MISC: <path> [<path> …]` — one or more optional additional reference files
 
 ## Phase 1: Gather Inputs
 
-1. Parse `$ARGUMENTS` by matching tokens against `PRD:`, `DESIGN:`, `UX:`, `MISC:` prefixes. For `MISC:`, split on commas.
+1. Parse `$ARGUMENTS` by splitting on whitespace and walking tokens left-to-right. A token that is exactly `PRD:`, `DESIGN:`, `UX:`, or `MISC:` (case-insensitive, colon included, nothing else) opens a new section; every subsequent non-key token is appended to that section's file list. `PRD:` accepts exactly one file path; `DESIGN:`, `UX:`, and `MISC:` each accept one or more.
 
 2. If no `PRD:` given, auto-detect:
    a. Glob `docs/tickets/PRDv*.md` → highest version number

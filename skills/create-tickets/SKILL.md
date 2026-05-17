@@ -14,11 +14,11 @@ Arguments are key-value pairs separated by spaces. Keys are case-insensitive.
 
 | Argument | Required | Description |
 | --- | --- | --- |
-| `PRD:<file_path>` | PRD mode only (or auto-detected) | Path to the product requirements document |
-| `FEATURES:<file_path>` | FEATURES mode only | Path to a feature catalog; adds new features to an existing project |
-| `DESIGN:<file_path>` | No | Path to design/architecture document |
-| `UX:<file_path>` | No | Path to UX specification document |
-| `MISC:<path1>,<path2>` | No | Comma-separated paths to additional reference files |
+| `PRD: <file_path>` | PRD mode only (or auto-detected) | Exactly one path to the product requirements document |
+| `FEATURES: <file_path>` | FEATURES mode only | Exactly one path to a feature catalog; adds new features to an existing project |
+| `DESIGN: <path> [<path> …]` | No | One or more paths to design/architecture documents |
+| `UX: <path> [<path> …]` | No | One or more paths to UX specification documents |
+| `MISC: <path> [<path> …]` | No | One or more paths to additional reference files |
 
 ### Modes
 
@@ -27,20 +27,20 @@ This skill has two modes, chosen by which of `PRD:` or `FEATURES:` is passed:
 - **PRD mode (greenfield)** — the default. Generates a full ticket set from scratch. Used when starting a new project or when a new PRD supersedes the ticket tracker.
 - **FEATURES mode (append)** — for adding new features to a project that already has tickets in `docs/tickets/`. Automatically appends without prompting; continues the existing ticket numbering pattern; reads existing tickets to avoid re-ticketing capabilities that are already built; merges new rows into the existing `INDEX.md` rather than overwriting it.
 
-`PRD:` and `FEATURES:` are mutually exclusive. If both are passed, the skill reports the conflict and stops. `DESIGN:`, `UX:`, and `MISC:` are accepted in either mode as supplementary context.
+`PRD:` and `FEATURES:` are mutually exclusive. If both are passed, the skill reports the conflict and stops. `DESIGN:`, `UX:`, and `MISC:` are accepted in either mode as supplementary context and each accept one or more space-separated file paths.
 
 **Examples:**
 ```
-/create-tickets PRD:docs/PRD.md DESIGN:docs/DESIGN.md
-/create-tickets PRD:docs/PRD.md UX:docs/UX.md MISC:docs/API.md,docs/MIGRATION.md
+/create-tickets PRD: docs/PRD.md DESIGN: docs/DESIGN.md
+/create-tickets PRD: docs/PRD.md UX: docs/UX_DESIGN.md docs/WIREFRAMES.md MISC: docs/API.md docs/MIGRATION.md
 /create-tickets
-/create-tickets FEATURES:docs/FEATURES.md
-/create-tickets FEATURES:docs/FEATURES.md DESIGN:docs/DESIGN.md
+/create-tickets FEATURES: docs/FEATURES.md
+/create-tickets FEATURES: docs/FEATURES.md DESIGN: docs/DESIGN.md docs/ARCHITECTURE.md
 ```
 
 ## Phase 1: Gather Inputs
 
-1. Parse `$ARGUMENTS` by splitting on whitespace. Match each token against the `PRD:`, `FEATURES:`, `DESIGN:`, `UX:`, and `MISC:` prefixes (case-insensitive). For `MISC:`, split the value on commas to get individual file paths.
+1. Parse `$ARGUMENTS` by splitting on whitespace and walking tokens left-to-right. A token that is exactly `PRD:`, `FEATURES:`, `DESIGN:`, `UX:`, or `MISC:` (case-insensitive, colon included, nothing else) opens a new section; every subsequent token that does not match a key is appended to that section's file list. If a token appears before any key, error and stop. `PRD:` and `FEATURES:` accept exactly one file path each — error if more are provided. `DESIGN:`, `UX:`, and `MISC:` accept one or more file paths. A key with no following paths is also an error.
 
 2. **Mode detection**:
    - If a `FEATURES:` argument is present → **FEATURES mode**. If `PRD:` is also present, report the conflict ("FEATURES mode is for appending to existing projects; PRD mode is for greenfield — pass one or the other, not both") and **stop**.
@@ -71,8 +71,8 @@ This skill has two modes, chosen by which of `PRD:` or `FEATURES:` is passed:
    - For checkpoint numbering, grep `docs/tickets/*.md` and `docs/tickets/INDEX.md` for `Checkpoint N` and `TEST: Checkpoint N`. The next checkpoint number is `max_found + 1` (or `0` if none found).
 
 6. Read all input files:
-   - **PRD mode**: the PRD (required); DESIGN, UX, MISC files (if provided); `CLAUDE.md` at the project root (if it exists) — for tech stack constraints, coding standards, and architectural decisions that affect how tickets are scoped.
-   - **FEATURES mode**: the FEATURES file (required); every existing `docs/tickets/NNN-*.md` file (required — needed to detect which features are already built); `docs/tickets/INDEX.md` (required); DESIGN, UX, MISC files (if provided); `CLAUDE.md` at the project root (if it exists).
+   - **PRD mode**: the PRD (required); all DESIGN, UX, and MISC files (one or more each, if provided); `CLAUDE.md` at the project root (if it exists) — for tech stack constraints, coding standards, and architectural decisions that affect how tickets are scoped.
+   - **FEATURES mode**: the FEATURES file (required); every existing `docs/tickets/NNN-*.md` file (required — needed to detect which features are already built); `docs/tickets/INDEX.md` (required); all DESIGN, UX, and MISC files (one or more each, if provided); `CLAUDE.md` at the project root (if it exists).
 
 7. If any specified file path does not exist, report the error and **stop**.
 
