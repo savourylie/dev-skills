@@ -22,7 +22,7 @@
     {
       "name": "update-ticket",
       "path": ".agent/skills/update-ticket",
-      "description": "Update ticket status, cascade dependencies, and refresh INDEX.md"
+      "description": "Update ticket status, checking matching worktrees, cascade dependencies, and refresh INDEX.md"
     },
     {
       "name": "commit-ticket",

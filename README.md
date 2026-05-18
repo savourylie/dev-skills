@@ -19,7 +19,7 @@ The Claude and Codex trees share support files where possible, but they do not s
 - `create-tickets` — generate dev tickets from a PRD and optional design/UX/reference documents into `docs/tickets/` with dependency ordering and an INDEX.md tracker
 - `implement-ticket` — implement a specific ticket from `docs/tickets/`, run code review, and provide manual testing instructions
 - `review-ticket` — review uncommitted changes, branch diffs, PR diffs, or ticket implementations for bugs and scope gaps
-- `update-ticket` — change a ticket status, cascade dependency markers, refresh `docs/tickets/INDEX.md`, and commit the doc updates
+- `update-ticket` — change a ticket status, check matching `.worktrees/` implementations, cascade dependency markers, refresh `docs/tickets/INDEX.md`, and commit the doc updates
 - `commit-ticket` — create a single git commit from the intended repo changes
 - `commit-push-pr` — create one commit, push the branch, and open a pull request
 - `create-worktree` — create git worktrees for one or more tickets under `.worktrees/NNN-slug/`, each on its own branch off a chosen base
@@ -192,7 +192,7 @@ $cinematic-design-system
 /review-ticket --pr 42             # Review a pull request
 /review-ticket 42                  # Review against ticket #42
 
-/update-ticket TICKET-003 done     # Mark a ticket as done
+/update-ticket TICKET-003 done     # Mark done; checks .worktrees/003-slug if present
 /update-ticket 5 in-progress       # Update ticket status
 
 /commit-ticket                     # Commit current changes
