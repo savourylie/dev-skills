@@ -88,6 +88,11 @@
       "name": "cinematic-design-system",
       "path": ".agent/skills/cinematic-design-system",
       "description": "Generate a cinematic design system bundle (4 Markdown docs + 2 HTML previews) from a director and a specific film via a 4-phase workflow"
+    },
+    {
+      "name": "readme-builder",
+      "path": ".agent/skills/readme-builder",
+      "description": "Generate or refresh README.md from observed codebase facts plus optional UI screenshots via Playwright MCP"
     }
   ]
 }
