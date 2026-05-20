@@ -2,6 +2,8 @@
 
 Software development and UI design workflow skills for OpenAI Codex, Claude Code, and Antigravity.
 
+cktk ships these workflows as **skills** — Markdown files with frontmatter that the host agent (Claude Code, Codex, or Antigravity) loads on demand. There is no runtime, no build step, and no dependency to install: cloning or installing the plugin makes the skill set discoverable to your agent of choice.
+
 ## Compatibility Layout
 
 This repo intentionally carries three skill trees:
@@ -26,6 +28,7 @@ The Claude and Codex trees share support files where possible, but they do not s
 - `merge-worktree` — merge ticket worktree branches back into their base, then remove the worktree and delete the local branch (cleanup half of `create-worktree`)
 - `feature-catalog` — explore a codebase and produce a user-facing feature catalog
 - `cktk-upgrade` — pull the latest cktk skills from GitHub and update the local installation
+- `readme-builder` — generate or refresh `README.md` from observed facts (framework, scripts, env vars, existing docs) plus optional UI screenshots via Playwright MCP. Claude Code only for now — pending replication to the Codex and Antigravity trees
 
 ### Design Skills
 
@@ -216,6 +219,9 @@ $cinematic-design-system
 /ux-design                         # Generate UX spec from PRD
 /ux-redesign                       # Audit and redesign UX spec
 /cinematic-design-system           # Film-driven design system bundle (4 docs + 2 HTML previews)
+
+/readme-builder                    # Generate or refresh README.md from codebase facts + screenshots
+/readme-builder no-screenshots     # Same, but skip Playwright screenshot capture
 ```
 
 ## Antigravity Install
@@ -305,6 +311,10 @@ The UX design skills expect:
 
 A PRD template is available at `templates/PRD.md`.
 
+## Contributing
+
+See [`AGENTS.md`](AGENTS.md) for the three-tree maintenance rules: every skill in `skills/` must have a matching folder under `.agents/skills/` and a symlink under `.agent/skills/`. After adding or renaming a skill, update all three trees plus `catalog.json` and `README.md`, then run the validation script.
+
 ## Validation
 
 Run the Codex-tree validation script after changing the skill layout:
@@ -312,3 +322,7 @@ Run the Codex-tree validation script after changing the skill layout:
 ```sh
 ./scripts/check-codex-skills.sh
 ```
+
+## License
+
+TODO: no LICENSE file is present in the repository. Add a license file (MIT, Apache-2.0, etc.) and update this section to declare it.
