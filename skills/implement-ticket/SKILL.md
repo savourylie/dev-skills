@@ -58,7 +58,11 @@ This phase is new. It runs whether or not worktree mode is requested, because bo
 ## Phase 2: Understand the Project
 
 1. Read `$WORK_DIR/docs/PRD.md` thoroughly. Internalize the product requirements, user stories, acceptance criteria, and scope.
-2. Read `$WORK_DIR/docs/DESIGN.md` thoroughly. Understand the architecture, data models, API contracts, tech stack choices, and any design decisions or constraints.
+2. Read the project's design source thoroughly:
+   - Prefer `$WORK_DIR/docs/DESIGN.md`.
+   - If that is missing, use `$WORK_DIR/docs/design/DESIGN.md` if present.
+   - If no `DESIGN.md` file exists, search for a folder named `design-system` (commonly `$WORK_DIR/design-system/` or `$WORK_DIR/docs/design-system/`) and use that as the design source.
+   - If using a `design-system/` folder, read its README/index file first if present, then read the files relevant to architecture, component patterns, tokens, data models, API contracts, and implementation constraints.
 3. Briefly summarize (to yourself) the key requirements and architectural decisions before moving on. This is your mental model for all implementation work.
 
 ## Phase 3: Load the Ticket
@@ -73,7 +77,7 @@ This phase is new. It runs whether or not worktree mode is requested, because bo
 
 ## Phase 4: Implement the Ticket
 
-1. Implement the ticket fully, following the design in `DESIGN.md` and the requirements in the ticket. All edits land under `$WORK_DIR`.
+1. Implement the ticket fully, following the project's design source and the requirements in the ticket. All edits land under `$WORK_DIR`.
 2. Write clean, well-structured code. Follow existing project conventions (naming, file structure, patterns).
 3. Include appropriate error handling, input validation, and edge case coverage.
 4. If the ticket specifies tests, write them. If it doesn't but the project has a test suite, add tests for your changes anyway.
@@ -113,7 +117,7 @@ Present the following to the user:
 ### Implementation Summary
 1. State which ticket was implemented (ID and title).
 2. Briefly summarize what was built — key files created or modified, architectural decisions made.
-3. Note any deviations from the ticket spec or design doc, and why.
+3. Note any deviations from the ticket spec or design source, and why.
 4. Note any remaining concerns, tech debt, or follow-up items.
 
 ### Worktree Note (only when `use_worktree` was true)

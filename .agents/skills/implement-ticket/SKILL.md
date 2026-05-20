@@ -47,7 +47,11 @@ Run this whether or not worktree mode is requested — both modes need the same 
 ## Phase 2: Understand the Project
 
 1. Read `$WORK_DIR/docs/PRD.md`.
-2. Read `$WORK_DIR/docs/DESIGN.md` (or `$WORK_DIR/docs/design/DESIGN.md` if that path is used instead).
+2. Read the project's design source:
+   - Prefer `$WORK_DIR/docs/DESIGN.md`.
+   - If that is missing, use `$WORK_DIR/docs/design/DESIGN.md` if present.
+   - If no `DESIGN.md` file exists, search for a folder named `design-system` (commonly `$WORK_DIR/design-system/` or `$WORK_DIR/docs/design-system/`) and use that as the design source.
+   - If using a `design-system/` folder, read its README/index file first if present, then read the files relevant to architecture, component patterns, tokens, data models, API contracts, and implementation constraints.
 3. Build a working mental model of the product requirements, architecture, constraints, and acceptance criteria before changing code.
 
 ## Phase 3: Pick the Ticket
@@ -61,7 +65,7 @@ Run this whether or not worktree mode is requested — both modes need the same 
 ## Phase 4: Implement
 
 1. State what you are about to implement, which files you expect to touch, and the main risks.
-2. Implement the ticket fully against the ticket requirements and the project's DESIGN.md. All edits land under `$WORK_DIR`.
+2. Implement the ticket fully against the ticket requirements and the project's design source. All edits land under `$WORK_DIR`.
 3. Follow project conventions and add tests whenever the repo has a test suite or the ticket implies testable behavior.
 4. Handle edge cases and integration details before moving on.
 
@@ -111,7 +115,7 @@ Perform the ticket status update yourself instead of delegating to another skill
 
 ## Safety Rules
 
-- If `docs/PRD.md`, the project's DESIGN.md (`docs/DESIGN.md` or `docs/design/DESIGN.md`), or the ticket tracker files are missing, stop and report the missing inputs.
+- If `docs/PRD.md`, the project's design source (`docs/DESIGN.md`, `docs/design/DESIGN.md`, or a folder named `design-system`), or the ticket tracker files are missing, stop and report the missing inputs.
 - If a dependency is unresolved, do not implement a blocked ticket out of order.
 - If unrelated user changes conflict with the ticket, stop and ask how to proceed instead of overwriting them.
 - In worktree mode, do not switch the user's main checkout to another branch and do not delete the worktree at the end — leave both alone so the user can inspect the work and run `$merge-worktree` deliberately.
