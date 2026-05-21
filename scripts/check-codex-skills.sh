@@ -31,7 +31,7 @@ validate_skill_md() {
     return
   fi
 
-  if ! description_length="$(ruby -e '
+  if ! description_length="$(RUBYOPT=--disable=gems ruby -e '
     require "yaml"
 
     metadata = YAML.load_file(ARGV[0])
@@ -104,7 +104,7 @@ for skill in "${claude_skills[@]}"; do
   if [[ ! -f "$codex_yaml" ]]; then
     fail "missing openai.yaml for $skill"
   else
-    if ! ruby -e 'require "yaml"; YAML.load_file(ARGV[0])' "$codex_yaml" >/dev/null 2>&1; then
+    if ! RUBYOPT=--disable=gems ruby -e 'require "yaml"; YAML.load_file(ARGV[0])' "$codex_yaml" >/dev/null 2>&1; then
       fail "invalid YAML in $codex_yaml"
     fi
   fi
